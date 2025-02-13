@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 // import Navbar from '@/components/navigation/Navbar';
 // import Footer from '@/components/navigation/Footer';
-// import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function MainLayout() {
   return (

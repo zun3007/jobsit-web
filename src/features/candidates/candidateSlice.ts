@@ -1,53 +1,19 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { User } from '@/features/auth/authSlice';
-
-export interface CandidateProfile {
-  id: number;
-  user: User;
-  university: {
-    id: number;
-    name: string;
-  };
-  cv: string | null;
-  referenceLetter: string | null;
-  positions: Array<{
-    id: number;
-    name: string;
-  }>;
-  majors: Array<{
-    id: number;
-    name: string;
-  }>;
-  schedules: Array<{
-    id: number;
-    name: string;
-  }>;
-  desiredJob: string;
-  desiredWorkingProvince: string;
-  searchable: boolean;
-}
-
-export interface Application {
-  id: number;
-  jobId: number;
-  candidateId: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  cv: string;
-  referenceLetter: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Candidate } from '@/services/candidateService';
+import { Job } from '@/services/jobService';
 
 interface CandidateState {
-  profile: CandidateProfile | null;
-  applications: Application[];
+  profile: Candidate | null;
+  recommendedJobs: Job[];
+  savedJobs: Job[];
   loading: boolean;
   error: string | null;
 }
 
 const initialState: CandidateState = {
   profile: null,
-  applications: [],
+  recommendedJobs: [],
+  savedJobs: [],
   loading: false,
   error: null,
 };
@@ -55,7 +21,55 @@ const initialState: CandidateState = {
 const candidateSlice = createSlice({
   name: 'candidates',
   initialState,
-  reducers: {},
+  reducers: {
+    setProfile: (state, action: PayloadAction<Candidate>) => {
+      state.profile = action.payload;
+      state.error = null;
+    },
+    updateProfile: (state, action: PayloadAction<Partial<Candidate>>) => {
+      if (state.profile) {
+        state.profile = { ...state.profile, ...action.payload };
+      }
+    },
+    setRecommendedJobs: (state, action: PayloadAction<Job[]>) => {
+      state.recommendedJobs = action.payload;
+    },
+    setSavedJobs: (state, action: PayloadAction<Job[]>) => {
+      state.savedJobs = action.payload;
+    },
+    addSavedJob: (state, action: PayloadAction<Job>) => {
+      state.savedJobs.unshift(action.payload);
+    },
+    removeSavedJob: (state, action: PayloadAction<number>) => {
+      state.savedJobs = state.savedJobs.filter(
+        (job) => job.id !== action.payload
+      );
+    },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
+    },
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
+    },
+    clearProfile: (state) => {
+      state.profile = null;
+      state.recommendedJobs = [];
+      state.savedJobs = [];
+      state.error = null;
+    },
+  },
 });
+
+export const {
+  setProfile,
+  updateProfile,
+  setRecommendedJobs,
+  setSavedJobs,
+  addSavedJob,
+  removeSavedJob,
+  setLoading,
+  setError,
+  clearProfile,
+} = candidateSlice.actions;
 
 export default candidateSlice.reducer;
