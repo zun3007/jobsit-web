@@ -7,6 +7,9 @@ export interface Company {
   description: string;
   logo?: string;
   website?: string;
+  email: string;
+  phone?: string;
+  tax?: string;
   industry?: string;
   size?: string;
   location: string;

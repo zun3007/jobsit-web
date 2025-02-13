@@ -49,8 +49,8 @@ export function useAuth() {
   };
 
   return {
-    login: loginMutation.mutate,
-    register: registerMutation.mutate,
+    login: loginMutation.mutateAsync,
+    register: registerMutation.mutateAsync,
     logout: handleLogout,
     profile,
     isLoading:

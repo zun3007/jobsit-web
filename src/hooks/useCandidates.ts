@@ -11,6 +11,8 @@ import {
   setError,
 } from '@/features/candidates/candidateSlice';
 import { extractErrorMessage } from '@/services/api';
+import { jobService } from '@/services/jobService';
+import { applicationService } from '@/services/applicationService';
 
 export function useCandidates() {
   const dispatch = useAppDispatch();
@@ -37,10 +39,13 @@ export function useCandidates() {
   });
 
   // Get applications query
-  const { data: applications, isLoading: isLoadingApplications } = useQuery({
-    queryKey: queryKeys.candidates.applications(),
-    queryFn: () => candidateService.getApplications({ no: 0, limit: 10 }),
-    enabled: !!localStorage.getItem('token'),
+  const {
+    data: applications,
+    isLoading: isLoadingApplications,
+    error: applicationsError,
+  } = useQuery({
+    queryKey: ['candidate-applications'],
+    queryFn: () => applicationService.getCandidateApplications(),
   });
 
   // Apply for job mutation
@@ -70,21 +75,25 @@ export function useCandidates() {
   });
 
   // Get recommended jobs query
-  const { data: recommendedJobs, isLoading: isLoadingRecommendedJobs } =
-    useQuery({
-      queryKey: queryKeys.candidates.root,
-      queryFn: candidateService.getRecommendedJobs,
-      enabled: !!localStorage.getItem('token'),
-    });
+  const {
+    data: recommendedJobs,
+    isLoading: isLoadingRecommendedJobs,
+    error: recommendedJobsError,
+  } = useQuery({
+    queryKey: ['recommended-jobs'],
+    queryFn: () => jobService.getRecommendedJobs(),
+  });
 
   return {
     profile,
-    applications: applications?.content || [],
+    applications: applications?.contents || [],
     totalApplications: applications?.totalElements || 0,
-    recommendedJobs: recommendedJobs || [],
+    recommendedJobs: recommendedJobs?.contents || [],
     isLoadingProfile,
     isLoadingApplications,
     isLoadingRecommendedJobs,
+    applicationsError,
+    recommendedJobsError,
     updateProfile: updateProfileMutation.mutate,
     applyForJob: applyForJobMutation.mutate,
     withdrawApplication: withdrawApplicationMutation.mutate,

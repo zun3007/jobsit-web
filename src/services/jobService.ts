@@ -123,4 +123,9 @@ export const jobService = {
       return handleApiError(error);
     }
   },
+
+  getRecommendedJobs: async (): Promise<JobResponse> => {
+    const response = await axiosInstance.get('/api/jobs/recommended');
+    return response.data;
+  },
 };
