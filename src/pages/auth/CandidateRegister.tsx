@@ -10,6 +10,7 @@ import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AxiosError } from 'axios';
 
 const schema = z
   .object({
@@ -69,10 +70,12 @@ export default function CandidateRegister() {
       showSuccess(
         'Đăng ký tài khoản thành công. Vui lòng kiểm tra email để kích hoạt tài khoản.'
       );
-      navigate('/auth/candidate');
-    } catch (error: any) {
-      if (error?.message) {
-        showError(error.message);
+      navigate('/auth/verify');
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        showError(
+          error.response?.data?.message || 'Đã xảy ra lỗi khi đăng ký tài khoản'
+        );
       } else {
         showError('Đã xảy ra lỗi khi đăng ký tài khoản');
       }

@@ -96,4 +96,20 @@ export const authService = {
       return handleApiError(error);
     }
   },
+
+  async verifyOTP(otp: string): Promise<void> {
+    try {
+      await axiosInstance.get(`/active?otp=${otp}`);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+
+  async resendOTP(email: string): Promise<void> {
+    try {
+      await axiosInstance.get(`/mail/active-user?email=${email}`);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
 };
