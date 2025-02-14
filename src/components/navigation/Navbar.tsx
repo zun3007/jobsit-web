@@ -72,14 +72,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to='/auth/register'
-                  className={`
-                    px-6 py-2 rounded transition-colors
-                    ${
-                      location.pathname.includes('/auth')
-                        ? 'bg-[#00B074] text-white hover:bg-[#00915F]' // Green variant
-                        : 'bg-[#F3BD50] text-white hover:bg-[#E1AD40]' // Yellow variant
-                    }
-                  `}
+                  className='text-gray-600 hover:text-[#00B074] transition-colors'
                 >
                   Đăng ký
                 </Link>

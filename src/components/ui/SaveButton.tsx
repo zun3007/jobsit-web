@@ -31,7 +31,7 @@ export default function SaveButton({
         ${
           isSaved
             ? 'bg-white text-primary border-primary'
-            : 'bg-white text-[#7D7D7D] border-[#F1F1F1] hover:bg-gray-50'
+            : 'bg-white text-[#7D7D7D] border-2 border-[#B0B0B0] hover:bg-gray-50'
         }
         ${className}
       `}

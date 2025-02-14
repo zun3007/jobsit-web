@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useJobs } from '@/hooks/useJobs';
 import { useAppDispatch, useAppSelector } from '@/app/store';
 import { setFilters } from '@/features/jobs/jobSlice';
@@ -8,7 +8,11 @@ import SaveButton from '@/components/ui/SaveButton';
 import RequireAuthModal from '@/components/auth/RequireAuthModal';
 import { IoSearch } from 'react-icons/io5';
 import { IoLocationOutline } from 'react-icons/io5';
-import { IoChevronUpOutline, IoChevronDownOutline } from 'react-icons/io5';
+import {
+  IoChevronUpOutline,
+  IoChevronDownOutline,
+  IoChevronDown,
+} from 'react-icons/io5';
 import { IoPersonOutline } from 'react-icons/io5';
 import { FaRegClock } from 'react-icons/fa';
 import { useSaveJob } from '@/hooks/useSaveJob';
@@ -20,8 +24,11 @@ export default function GuestHome() {
   const { savedJobs } = useAppSelector((state) => state.jobs);
   const { saveJob, unsaveJob } = useSaveJob();
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [location, setLocation] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(
+    searchParams.get('search') || ''
+  );
+  const [location, setLocation] = useState(searchParams.get('location') || '');
 
   // Collapse states
   const [workTypeCollapsed, setWorkTypeCollapsed] = useState(false);
@@ -33,11 +40,29 @@ export default function GuestHome() {
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [selectedMajors, setSelectedMajors] = useState<string[]>([]);
 
+  // Update search params when search term or location changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    if (searchTerm) {
+      params.set('search', searchTerm);
+    } else {
+      params.delete('search');
+    }
+    if (location) {
+      params.set('location', location);
+    } else {
+      params.delete('location');
+    }
+    setSearchParams(params);
+  }, [searchTerm, location, setSearchParams]);
+
+  // Handle search
   const handleSearch = () => {
+    // Update filters for job search
     dispatch(
       setFilters({
-        name: searchTerm,
-        provinceName: location,
+        name: searchTerm || undefined,
+        provinceName: location || undefined,
         schedule:
           selectedTypes.length > 0 ? selectedTypes.join(',') : undefined,
         position:
@@ -45,9 +70,40 @@ export default function GuestHome() {
             ? selectedPositions.join(',')
             : undefined,
         major: selectedMajors.length > 0 ? selectedMajors.join(',') : undefined,
+        no: 0, // Reset to first page when searching
       })
     );
   };
+
+  // Add effect to trigger search when location changes
+  useEffect(() => {
+    handleSearch();
+  }, [location, searchTerm]);
+
+  // Perform search when URL parameters change
+  useEffect(() => {
+    const urlSearchTerm = searchParams.get('search');
+    const urlLocation = searchParams.get('location');
+
+    if (urlSearchTerm || urlLocation) {
+      setSearchTerm(urlSearchTerm || '');
+      setLocation(urlLocation || '');
+      dispatch(
+        setFilters({
+          name: urlSearchTerm || undefined,
+          provinceName: urlLocation || undefined,
+          schedule:
+            selectedTypes.length > 0 ? selectedTypes.join(',') : undefined,
+          position:
+            selectedPositions.length > 0
+              ? selectedPositions.join(',')
+              : undefined,
+          major:
+            selectedMajors.length > 0 ? selectedMajors.join(',') : undefined,
+        })
+      );
+    }
+  }, [searchParams, dispatch]);
 
   const handleSaveJob = async (jobId: number, isSaved: boolean) => {
     if (!isAuthenticated) {
@@ -358,14 +414,81 @@ export default function GuestHome() {
                   />
                 </div>
                 <div className='flex-1 relative'>
-                  <IoLocationOutline className='absolute left-3 top-1/2 -translate-y-1/2 text-[#00B074] w-5 h-5' />
-                  <input
-                    type='text'
-                    placeholder='Khu vực'
+                  <IoLocationOutline className='absolute left-3 top-1/2 -translate-y-1/2 text-[#00B074] w-5 h-5 pointer-events-none z-10' />
+                  <select
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    className='w-full pl-10 pr-4 py-2 border border-[#DEDEDE] rounded focus:outline-none focus:border-[#00B074]'
-                  />
+                    className='w-full pl-10 pr-4 py-2 border text-slate-400 font-light border-[#DEDEDE] rounded focus:outline-none focus:border-[#00B074] appearance-none bg-white cursor-pointer'
+                    aria-label='Chọn khu vực'
+                  >
+                    <option value=''>Khu vực</option>
+                    <option value='Hà Nội'>Hà Nội</option>
+                    <option value='Hồ Chí Minh'>Hồ Chí Minh</option>
+                    <option value='Đà Nẵng'>Đà Nẵng</option>
+                    <option value='An Giang'>An Giang</option>
+                    <option value='Bà Rịa - Vũng Tàu'>Bà Rịa - Vũng Tàu</option>
+                    <option value='Bắc Giang'>Bắc Giang</option>
+                    <option value='Bắc Kạn'>Bắc Kạn</option>
+                    <option value='Bạc Liêu'>Bạc Liêu</option>
+                    <option value='Bắc Ninh'>Bắc Ninh</option>
+                    <option value='Bến Tre'>Bến Tre</option>
+                    <option value='Bình Định'>Bình Định</option>
+                    <option value='Bình Dương'>Bình Dương</option>
+                    <option value='Bình Phước'>Bình Phước</option>
+                    <option value='Bình Thuận'>Bình Thuận</option>
+                    <option value='Cà Mau'>Cà Mau</option>
+                    <option value='Cần Thơ'>Cần Thơ</option>
+                    <option value='Cao Bằng'>Cao Bằng</option>
+                    <option value='Đắk Lắk'>Đắk Lắk</option>
+                    <option value='Đắk Nông'>Đắk Nông</option>
+                    <option value='Điện Biên'>Điện Biên</option>
+                    <option value='Đồng Nai'>Đồng Nai</option>
+                    <option value='Đồng Tháp'>Đồng Tháp</option>
+                    <option value='Gia Lai'>Gia Lai</option>
+                    <option value='Hà Giang'>Hà Giang</option>
+                    <option value='Hà Nam'>Hà Nam</option>
+                    <option value='Hà Tĩnh'>Hà Tĩnh</option>
+                    <option value='Hải Dương'>Hải Dương</option>
+                    <option value='Hải Phòng'>Hải Phòng</option>
+                    <option value='Hậu Giang'>Hậu Giang</option>
+                    <option value='Hòa Bình'>Hòa Bình</option>
+                    <option value='Hưng Yên'>Hưng Yên</option>
+                    <option value='Khánh Hòa'>Khánh Hòa</option>
+                    <option value='Kiên Giang'>Kiên Giang</option>
+                    <option value='Kon Tum'>Kon Tum</option>
+                    <option value='Lai Châu'>Lai Châu</option>
+                    <option value='Lâm Đồng'>Lâm Đồng</option>
+                    <option value='Lạng Sơn'>Lạng Sơn</option>
+                    <option value='Lào Cai'>Lào Cai</option>
+                    <option value='Long An'>Long An</option>
+                    <option value='Nam Định'>Nam Định</option>
+                    <option value='Nghệ An'>Nghệ An</option>
+                    <option value='Ninh Bình'>Ninh Bình</option>
+                    <option value='Ninh Thuận'>Ninh Thuận</option>
+                    <option value='Phú Thọ'>Phú Thọ</option>
+                    <option value='Phú Yên'>Phú Yên</option>
+                    <option value='Quảng Bình'>Quảng Bình</option>
+                    <option value='Quảng Nam'>Quảng Nam</option>
+                    <option value='Quảng Ngãi'>Quảng Ngãi</option>
+                    <option value='Quảng Ninh'>Quảng Ninh</option>
+                    <option value='Quảng Trị'>Quảng Trị</option>
+                    <option value='Sóc Trăng'>Sóc Trăng</option>
+                    <option value='Sơn La'>Sơn La</option>
+                    <option value='Tây Ninh'>Tây Ninh</option>
+                    <option value='Thái Bình'>Thái Bình</option>
+                    <option value='Thái Nguyên'>Thái Nguyên</option>
+                    <option value='Thanh Hóa'>Thanh Hóa</option>
+                    <option value='Thừa Thiên Huế'>Thừa Thiên Huế</option>
+                    <option value='Tiền Giang'>Tiền Giang</option>
+                    <option value='Trà Vinh'>Trà Vinh</option>
+                    <option value='Tuyên Quang'>Tuyên Quang</option>
+                    <option value='Vĩnh Long'>Vĩnh Long</option>
+                    <option value='Vĩnh Phúc'>Vĩnh Phúc</option>
+                    <option value='Yên Bái'>Yên Bái</option>
+                  </select>
+                  <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                    <IoChevronDown className='w-4 h-4 text-gray-400' />
+                  </div>
                 </div>
                 <button
                   onClick={handleSearch}
@@ -404,12 +527,9 @@ export default function GuestHome() {
                       >
                         {job.name}
                       </Link>
-                      <Link
-                        to={`/companies/${job.companyDTO.id}`}
-                        className='block text-gray-600 hover:text-[#00B074] transition-colors'
-                      >
+                      <a className='cursor-pointer block text-gray-600 hover:text-[#00B074] transition-colors'>
                         {job.companyDTO.name}
-                      </Link>
+                      </a>
                       <div className='flex items-center gap-2 mt-2'>
                         <IoLocationOutline className='w-4 h-4 text-[#00B074]' />
                         <span className='text-sm text-gray-500'>
