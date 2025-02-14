@@ -16,6 +16,10 @@ import {
   IoTime,
   IoChevronDown,
 } from 'react-icons/io5';
+import { useSaveJob } from '@/hooks/useSaveJob';
+import { useAppSelector } from '@/app/store';
+import { useToast } from '@/hooks/useToast';
+import { AxiosError } from 'axios';
 
 export default function JobDetails() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +30,9 @@ export default function JobDetails() {
   const ITEMS_PER_PAGE = 6;
   const [searchTerm, setSearchTerm] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
+  const { saveJob, unsaveJob, isSaving } = useSaveJob();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const { showError } = useToast();
 
   const { data: job, isLoading } = useQuery({
     queryKey: ['job', id],
@@ -57,7 +64,11 @@ export default function JobDetails() {
   };
 
   const handleApplyJob = () => {
-    setShowAuthModal(true);
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    navigate('/application');
   };
 
   const formatBulletPoints = (text: string) => {
@@ -76,6 +87,29 @@ export default function JobDetails() {
     if (searchTerm) searchParams.set('search', searchTerm);
     if (searchLocation) searchParams.set('location', searchLocation);
     navigate(`/?${searchParams.toString()}`);
+  };
+
+  const handleSaveJob = async (jobId: number, isSaved: boolean) => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    try {
+      if (isSaved) {
+        await saveJob(jobId);
+      } else {
+        await unsaveJob(jobId);
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        showError(
+          error.response?.data?.message || 'Đã xảy ra lỗi khi lưu công việc'
+        );
+      } else {
+        showError('Đã xảy ra lỗi khi lưu công việc');
+      }
+    }
   };
 
   if (isLoading || !job) {
@@ -262,8 +296,9 @@ export default function JobDetails() {
                     ỨNG TUYỂN NGAY
                   </button>
                   <SaveButton
-                    onToggle={() => setShowAuthModal(true)}
-                    className='w-full'
+                    jobId={job.id}
+                    onToggle={(saved) => handleSaveJob(job.id, saved)}
+                    isLoading={isSaving}
                   />
                 </div>
               </div>
@@ -362,8 +397,9 @@ export default function JobDetails() {
                           ỨNG TUYỂN NGAY
                         </button>
                         <SaveButton
-                          className='w-[50%] text-sm sm:text-base'
-                          onToggle={() => setShowAuthModal(true)}
+                          jobId={job.id}
+                          onToggle={(saved) => handleSaveJob(job.id, saved)}
+                          isLoading={isSaving}
                         />
                       </div>
                       <div className='text-slate-900'>
@@ -609,8 +645,11 @@ export default function JobDetails() {
                                     </p>
                                   </div>
                                   <SaveButton
-                                    onToggle={() => setShowAuthModal(true)}
-                                    className='flex-shrink-0'
+                                    jobId={otherJob.id}
+                                    onToggle={(saved) =>
+                                      handleSaveJob(otherJob.id, saved)
+                                    }
+                                    isLoading={isSaving}
                                   />
                                 </div>
 

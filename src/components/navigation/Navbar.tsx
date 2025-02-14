@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '@/app/store';
 import Dropdown from '@/components/ui/Dropdown';
-import { IoChevronDown } from 'react-icons/io5';
+import { IoChevronDown, IoShieldCheckmarkOutline } from 'react-icons/io5';
 
 export default function Navbar({ color = 'green' }) {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
@@ -64,6 +64,13 @@ export default function Navbar({ color = 'green' }) {
             ) : (
               /* Auth Buttons */
               <div className='flex items-center gap-4'>
+                <Link
+                  to='/auth/verify'
+                  className='text-gray-600 hover:text-[#00B074] transition-colors'
+                  aria-label='Xác thực tài khoản'
+                >
+                  <IoShieldCheckmarkOutline className='w-6 h-6' />
+                </Link>
                 <Link
                   to='/auth/candidate'
                   className='text-gray-800 font-bold hover:text-[#00B074] transition-colors'

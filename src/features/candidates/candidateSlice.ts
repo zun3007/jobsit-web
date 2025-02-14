@@ -6,6 +6,7 @@ interface CandidateState {
   profile: Candidate | null;
   recommendedJobs: Job[];
   savedJobs: Job[];
+  savedJobIds: number[];
   loading: boolean;
   error: string | null;
 }
@@ -14,6 +15,7 @@ const initialState: CandidateState = {
   profile: null,
   recommendedJobs: [],
   savedJobs: [],
+  savedJobIds: [],
   loading: false,
   error: null,
 };
@@ -36,13 +38,18 @@ const candidateSlice = createSlice({
     },
     setSavedJobs: (state, action: PayloadAction<Job[]>) => {
       state.savedJobs = action.payload;
+      state.savedJobIds = action.payload.map((job) => job.id);
     },
     addSavedJob: (state, action: PayloadAction<Job>) => {
       state.savedJobs.unshift(action.payload);
+      state.savedJobIds.push(action.payload.id);
     },
     removeSavedJob: (state, action: PayloadAction<number>) => {
       state.savedJobs = state.savedJobs.filter(
         (job) => job.id !== action.payload
+      );
+      state.savedJobIds = state.savedJobIds.filter(
+        (id) => id !== action.payload
       );
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
@@ -55,6 +62,7 @@ const candidateSlice = createSlice({
       state.profile = null;
       state.recommendedJobs = [];
       state.savedJobs = [];
+      state.savedJobIds = [];
       state.error = null;
     },
   },

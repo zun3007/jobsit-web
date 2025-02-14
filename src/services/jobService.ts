@@ -90,8 +90,17 @@ export const jobService = {
 
   async getSavedJobs(): Promise<Job[]> {
     try {
-      const response = await axiosInstance.get<Job[]>('/job/saved');
+      const response = await axiosInstance.get('/candidate-job-care/job-save');
       return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+
+  async getSavedJobIds(): Promise<number[]> {
+    try {
+      const response = await axiosInstance.get('/candidate-job-care/job-save');
+      return response.data.map((job: Job) => job.id);
     } catch (error) {
       return handleApiError(error);
     }
@@ -99,7 +108,7 @@ export const jobService = {
 
   async saveJob(jobId: number): Promise<void> {
     try {
-      await axiosInstance.post(`/job/${jobId}/save`);
+      await axiosInstance.post(`/candidate-job-care?idJob=${jobId}`);
     } catch (error) {
       return handleApiError(error);
     }
@@ -107,7 +116,7 @@ export const jobService = {
 
   async unsaveJob(jobId: number): Promise<void> {
     try {
-      await axiosInstance.delete(`/job/${jobId}/save`);
+      await axiosInstance.delete(`/candidate-job-care?idJob=${jobId}`);
     } catch (error) {
       return handleApiError(error);
     }
@@ -125,7 +134,7 @@ export const jobService = {
   },
 
   getRecommendedJobs: async (): Promise<JobResponse> => {
-    const response = await axiosInstance.get('/api/jobs/recommended');
+    const response = await axiosInstance.get('/jobs/recommended');
     return response.data;
   },
 };

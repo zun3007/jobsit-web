@@ -1,4 +1,3 @@
-import { User } from '@/features/auth/authSlice';
 import { axiosInstance, handleApiError } from './api';
 
 export interface LoginRequest {
@@ -17,7 +16,12 @@ export interface RegisterRequest {
 
 export interface LoginResponse {
   token: string;
-  user: User;
+  type: string;
+  email: string;
+  role: string;
+  avatar: string | null;
+  idUser: number;
+  message: string | null;
 }
 
 export interface UpdateProfileRequest {
@@ -26,6 +30,69 @@ export interface UpdateProfileRequest {
   phone?: string;
   gender?: number;
   avatar?: string;
+}
+
+export interface RoleDTO {
+  id: number;
+  name: string;
+}
+
+export interface StatusDTO {
+  id: number;
+  name: string;
+}
+
+export interface UserDTO {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  gender: number | null;
+  birthDay: string | null;
+  phone: string;
+  avatar: string | null;
+  location: string | null;
+  mailReceive: boolean;
+  roleDTO: RoleDTO;
+  statusDTO: StatusDTO;
+}
+
+export interface UniversityDTO {
+  id: number;
+  name: string;
+}
+
+export interface PositionDTO {
+  id: number;
+  name: string;
+}
+
+export interface MajorDTO {
+  id: number;
+  name: string;
+}
+
+export interface ScheduleDTO {
+  id: number;
+  name: string;
+}
+
+export interface CandidateOtherInfoDTO {
+  universityDTO: UniversityDTO | null;
+  referenceLetter: string | null;
+  searchable: boolean;
+  positionDTOs: PositionDTO[];
+  majorDTOs: MajorDTO[];
+  scheduleDTOs: ScheduleDTO[];
+  desiredJob: string | null;
+  desiredWorkingProvince: string | null;
+  cv: string | null;
+}
+
+export interface User {
+  id: number;
+  userDTO: UserDTO;
+  candidateOtherInfoDTO: CandidateOtherInfoDTO;
 }
 
 export const authService = {
@@ -67,7 +134,12 @@ export const authService = {
 
   async getProfile(): Promise<User> {
     try {
-      const response = await axiosInstance.get<User>('/user/profile');
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        throw new Error('Not authenticated');
+      }
+      const { id } = JSON.parse(userData);
+      const response = await axiosInstance.get<User>(`/candidate/user/${id}`);
       return response.data;
     } catch (error) {
       return handleApiError(error);

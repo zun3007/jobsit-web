@@ -20,7 +20,7 @@ export interface AuthState {
 }
 
 const initialState: AuthState = {
-  user: null,
+  user: JSON.parse(localStorage.getItem('user') || 'null'),
   token: localStorage.getItem('token'),
   isAuthenticated: !!localStorage.getItem('token'),
   loading: false,
@@ -33,20 +33,37 @@ const authSlice = createSlice({
   reducers: {
     setCredentials: (
       state,
-      action: PayloadAction<{ user: User; token: string }>
+      action: PayloadAction<{
+        token: string;
+        type: string;
+        email: string;
+        role: string;
+        avatar: string | null;
+        idUser: number;
+        message: string | null;
+      }>
     ) => {
-      const { user, token } = action.payload;
-      state.user = user;
+      const { token, email, role, avatar, idUser: id } = action.payload;
       state.token = token;
+      state.user = {
+        id,
+        email,
+        role,
+        avatar: avatar || undefined,
+        firstName: '', // These will be updated when we fetch the full profile
+        lastName: '',
+      };
       state.isAuthenticated = true;
       state.error = null;
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(state.user));
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
@@ -57,6 +74,7 @@ const authSlice = createSlice({
     updateUser: (state, action: PayloadAction<Partial<User>>) => {
       if (state.user) {
         state.user = { ...state.user, ...action.payload };
+        localStorage.setItem('user', JSON.stringify(state.user));
       }
     },
   },

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useJobs } from '@/hooks/useJobs';
 import { useAppDispatch, useAppSelector } from '@/app/store';
 import { setFilters } from '@/features/jobs/jobSlice';
@@ -22,10 +22,10 @@ import { useSaveJob } from '@/hooks/useSaveJob';
 export default function GuestHome() {
   const dispatch = useAppDispatch();
   const { jobs, isLoading, totalJobs } = useJobs();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const { savedJobs } = useAppSelector((state) => state.jobs);
   const filters = useAppSelector((state) => state.filters.jobs);
-  const { saveJob, unsaveJob } = useSaveJob();
+  const { saveJob, unsaveJob, isSaving } = useSaveJob();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(
@@ -33,6 +33,7 @@ export default function GuestHome() {
   );
   const [location, setLocation] = useState(searchParams.get('location') || '');
   const [currentPage, setCurrentPage] = useState(1);
+  const navigate = useNavigate();
 
   // Collapse states
   const [workTypeCollapsed, setWorkTypeCollapsed] = useState(false);
@@ -46,6 +47,18 @@ export default function GuestHome() {
 
   // Calculate total pages
   const totalPages = Math.ceil(totalJobs / (filters.limit || 10));
+
+  // Log user role when authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('User Information:', {
+        email: user.email,
+        role: user.role,
+        userId: user.id,
+        name: `${user.firstName} ${user.lastName}`,
+      });
+    }
+  }, [isAuthenticated, user]);
 
   // Update search params when search term or location changes
   useEffect(() => {
@@ -126,7 +139,7 @@ export default function GuestHome() {
 
   const handleSaveJob = async (jobId: number, isSaved: boolean) => {
     if (!isAuthenticated) {
-      setShowAuthModal(true);
+      navigate('/auth/candidate');
       return;
     }
 
@@ -574,8 +587,9 @@ export default function GuestHome() {
                     {/* Right Side Info */}
                     <div className='flex flex-col items-end justify-between'>
                       <SaveButton
-                        defaultSaved={savedJobs.includes(job.id)}
+                        jobId={job.id}
                         onToggle={(saved) => handleSaveJob(job.id, saved)}
+                        disabled={isSaving}
                       />
                       <div className='text-right'>
                         <div className='flex items-center justify-end text-gray-500 gap-1 text-sm'>

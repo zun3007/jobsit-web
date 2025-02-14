@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   IoPersonOutline,
   IoSettingsOutline,
   IoLogOutOutline,
 } from 'react-icons/io5';
+import { useAuth } from '@/hooks/useAuth';
 
 interface DropdownProps {
   userName: string;
@@ -13,6 +15,8 @@ interface DropdownProps {
 export default function Dropdown({ userName, userImage }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -27,6 +31,12 @@ export default function Dropdown({ userName, userImage }: DropdownProps) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    setIsOpen(false);
+    navigate('/');
+  };
 
   return (
     <div className='relative' ref={dropdownRef}>
@@ -79,24 +89,35 @@ export default function Dropdown({ userName, userImage }: DropdownProps) {
 
           {/* Menu Items */}
           <div className='py-1'>
-            <button className='w-full px-3 sm:px-4 py-2 sm:py-2.5 text-left hover:bg-gray-50 flex items-center gap-2 sm:gap-3'>
+            <Link
+              to='/candidate/dashboard'
+              onClick={() => setIsOpen(false)}
+              className='w-full px-3 sm:px-4 py-2 sm:py-2.5 text-left hover:bg-gray-50 flex items-center gap-2 sm:gap-3'
+            >
               <div className='w-5 h-5 sm:w-6 sm:h-6 rounded bg-secondary flex items-center justify-center'>
                 <IoPersonOutline className='w-3 h-3 sm:w-4 sm:h-4 text-white' />
               </div>
               <span className='text-[13px] sm:text-[15px]'>
-                Thông tin tài khoản
+                Bảng điều khiển
               </span>
-            </button>
-            <button className='w-full px-3 sm:px-4 py-2 sm:py-2.5 text-left hover:bg-gray-50 flex items-center gap-2 sm:gap-3'>
+            </Link>
+            <Link
+              to='/candidate/change-password'
+              onClick={() => setIsOpen(false)}
+              className='w-full px-3 sm:px-4 py-2 sm:py-2.5 text-left hover:bg-gray-50 flex items-center gap-2 sm:gap-3'
+            >
               <div className='w-5 h-5 sm:w-6 sm:h-6 rounded bg-secondary flex items-center justify-center'>
                 <IoSettingsOutline className='w-3 h-3 sm:w-4 sm:h-4 text-white' />
               </div>
               <span className='text-[13px] sm:text-[15px]'>
                 Thay đổi mật khẩu
               </span>
-            </button>
+            </Link>
             <div className='h-[1px] bg-gray-200 my-1' />
-            <button className='w-full px-3 sm:px-4 py-2 sm:py-2.5 text-left hover:bg-gray-50 flex items-center gap-2 sm:gap-3 text-gray-700'>
+            <button
+              onClick={handleLogout}
+              className='w-full px-3 sm:px-4 py-2 sm:py-2.5 text-left hover:bg-gray-50 flex items-center gap-2 sm:gap-3 text-gray-700'
+            >
               <IoLogOutOutline className='w-5 h-5 sm:w-6 sm:h-6' />
               <span className='text-[13px] sm:text-[15px]'>Đăng xuất</span>
             </button>
