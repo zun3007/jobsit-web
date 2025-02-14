@@ -12,6 +12,8 @@ import {
   IoChevronUpOutline,
   IoChevronDownOutline,
   IoChevronDown,
+  IoChevronBack,
+  IoChevronForward,
 } from 'react-icons/io5';
 import { IoPersonOutline } from 'react-icons/io5';
 import { FaRegClock } from 'react-icons/fa';
@@ -19,9 +21,10 @@ import { useSaveJob } from '@/hooks/useSaveJob';
 
 export default function GuestHome() {
   const dispatch = useAppDispatch();
-  const { jobs, isLoading } = useJobs();
+  const { jobs, isLoading, totalJobs } = useJobs();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const { savedJobs } = useAppSelector((state) => state.jobs);
+  const filters = useAppSelector((state) => state.filters.jobs);
   const { saveJob, unsaveJob } = useSaveJob();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -29,6 +32,7 @@ export default function GuestHome() {
     searchParams.get('search') || ''
   );
   const [location, setLocation] = useState(searchParams.get('location') || '');
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Collapse states
   const [workTypeCollapsed, setWorkTypeCollapsed] = useState(false);
@@ -39,6 +43,9 @@ export default function GuestHome() {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [selectedMajors, setSelectedMajors] = useState<string[]>([]);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(totalJobs / (filters.limit || 10));
 
   // Update search params when search term or location changes
   useEffect(() => {
@@ -71,6 +78,7 @@ export default function GuestHome() {
             : undefined,
         major: selectedMajors.length > 0 ? selectedMajors.join(',') : undefined,
         no: 0, // Reset to first page when searching
+        limit: filters.limit, // Preserve the existing limit
       })
     );
   };
@@ -104,6 +112,17 @@ export default function GuestHome() {
       );
     }
   }, [searchParams, dispatch]);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    dispatch(
+      setFilters({
+        ...filters,
+        no: page - 1, // API uses 0-based index
+      })
+    );
+  };
 
   const handleSaveJob = async (jobId: number, isSaved: boolean) => {
     if (!isAuthenticated) {
@@ -578,6 +597,46 @@ export default function GuestHome() {
                   </div>
                 </div>
               ))}
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className='flex justify-center mt-6 gap-2'>
+                  <button
+                    className='w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 disabled:opacity-50'
+                    disabled={currentPage === 1}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    aria-label='Previous page'
+                  >
+                    <IoChevronBack className='w-4 h-4' />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`
+                        w-8 h-8 rounded-full text-sm font-medium transition-colors
+                        ${
+                          page === currentPage
+                            ? 'rounded-full border border-[#00B074] text-slate-900'
+                            : 'text-slate-700 rounded-full hover:border hover:border-[#00B074] hover:text-slate-900'
+                        }
+                      `}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
+                  <button
+                    className='w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 disabled:opacity-50'
+                    disabled={currentPage === totalPages}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    aria-label='Next page'
+                  >
+                    <IoChevronForward className='w-4 h-4' />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

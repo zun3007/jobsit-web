@@ -29,7 +29,7 @@ interface FilterState {
 const initialState: FilterState = {
   jobs: {
     no: 0,
-    limit: 10,
+    limit: 5,
   },
   universities: {
     no: 0,
