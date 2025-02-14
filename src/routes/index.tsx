@@ -15,6 +15,7 @@ const GuestHome = lazy(() => import('@/pages/guest/Home'));
 const JobDetails = lazy(() => import('@/pages/guest/JobDetails'));
 const NotFound = lazy(() => import('@/pages/guest/NotFound'));
 const CandidateDashboard = lazy(() => import('@/pages/candidate/Dashboard'));
+const SavedJobs = lazy(() => import('@/pages/candidate/SavedJobs'));
 
 export const router = createBrowserRouter([
   {
@@ -29,7 +30,7 @@ export const router = createBrowserRouter([
         children: [
           { path: 'dashboard', element: <CandidateDashboard /> },
           { path: 'applications', element: <CandidateDashboard /> },
-          { path: 'saved-jobs', element: <CandidateDashboard /> },
+          { path: 'saved-jobs', element: <SavedJobs /> },
           { path: 'profile', element: <CandidateDashboard /> },
         ],
       },

@@ -589,7 +589,7 @@ export default function GuestHome() {
                       <SaveButton
                         jobId={job.id}
                         onToggle={(saved) => handleSaveJob(job.id, saved)}
-                        disabled={isSaving}
+                        isLoading={isSaving}
                       />
                       <div className='text-right'>
                         <div className='flex items-center justify-end text-gray-500 gap-1 text-sm'>

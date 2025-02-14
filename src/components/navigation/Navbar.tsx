@@ -28,13 +28,13 @@ export default function Navbar({ color = 'green' }) {
                   Tìm việc làm
                 </Link>
                 <Link
-                  to='/applications'
+                  to='/candidate/applications'
                   className='text-gray-600 hover:text-[#00B074] transition-colors'
                 >
                   Việc làm đã ứng tuyển
                 </Link>
                 <Link
-                  to='/saved-jobs'
+                  to='/candidate/saved-jobs'
                   className='text-gray-600 hover:text-[#00B074] transition-colors'
                 >
                   Việc làm đã lưu
