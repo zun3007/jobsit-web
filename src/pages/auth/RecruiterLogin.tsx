@@ -2,38 +2,46 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
-import { FcGoogle } from 'react-icons/fc';
-import { FaFacebook } from 'react-icons/fa';
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
 import { AxiosError } from 'axios';
 import ToastContainer from '@/components/ui/ToastContainer';
 import Spinner from '@/components/ui/Spinner';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
-export default function RecruiterLogin() {
+const schema = z.object({
+  email: z.string().email('Email không hợp lệ'),
+  password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+});
+
+type FormData = z.infer<typeof schema>;
+
+export default function CandidateLogin() {
   const navigate = useNavigate();
   const { login, isLoggingIn } = useAuth();
   const { toasts, showError, removeToast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
 
-    if (!email || !password) {
-      showError('Vui lòng nhập đầy đủ thông tin đăng nhập.');
-      return;
-    }
-
+  const onSubmit = async (data: FormData) => {
     try {
       const result = await login({
-        email,
-        password,
+        email: data.email,
+        password: data.password,
       });
 
       if (result?.token) {
-        navigate('/hr/dashboard');
+        navigate('/candidate/dashboard');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -46,99 +54,119 @@ export default function RecruiterLogin() {
   };
 
   return (
-    <div className='max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow'>
-      {/* Logo */}
-      <div className='flex justify-center'>
-        <img src='/logo.png' alt='IT Jobs' className='h-12' />
-      </div>
-
+    <div
+      className='w-[480px] h-[739px] bg-white rounded-[10px] border border-[#DEDEDE] px-16 py-20 space-x-3'
+      style={{ boxShadow: '0 4px 4px rgba(0, 0, 0, 0.2)' }}
+    >
       {/* Header */}
-      <div className='text-center'>
-        <h2 className='text-3xl font-bold text-gray-900'>ĐĂNG NHẬP</h2>
-        <p className='mt-2 text-sm text-gray-600'>NHÀ TUYỂN DỤNG</p>
+      <div className='text-center mb-6'>
+        <h2 className='text-[24px] font-bold text-gray-900'>ĐĂNG NHẬP</h2>
+        <div className='relative inline-block'>
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className='inline-flex items-center gap-2 bg-[#F3BD50] text-white rounded-md px-4 py-1 text-sm font-medium mt-2'
+          >
+            NHÀ TUYỂN DỤNG/ CỘNG TÁC VIÊN
+          </button>
+
+          {isDropdownOpen && (
+            <div className='absolute left-1/2 transform -translate-x-1/2 z-10 mt-1 w-[220px] bg-white border border-gray-200 rounded-md shadow-lg'>
+              <div className='py-1'>
+                <a
+                  href='/auth/candidate'
+                  className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                >
+                  Ứng viên
+                </a>
+                <a
+                  href='/auth/recruiter'
+                  className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                >
+                  Nhà tuyển dụng/ Cộng tác viên
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Login Form */}
-      <form className='mt-8 space-y-6' onSubmit={handleSubmit}>
-        <div className='rounded-md shadow-sm space-y-4'>
+      <form className='space-y-6' onSubmit={handleSubmit(onSubmit)}>
+        <div className='space-y-5'>
           <div>
-            <label
-              htmlFor='email'
-              className='block text-sm font-medium text-gray-700'
-            >
+            <label htmlFor='email' className='block text-base font-bold mb-2'>
               Email
             </label>
             <input
               id='email'
-              name='email'
               type='email'
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className='form-input mt-1'
+              {...register('email')}
+              className='w-full px-4 py-3 rounded-lg border-2 border-primary focus:outline-none focus:ring-0'
               placeholder='example@email.com'
             />
+            {errors.email && (
+              <p className='mt-1 text-sm text-red-600'>
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           <div>
             <label
               htmlFor='password'
-              className='block text-sm font-medium text-gray-700'
+              className='block text-base font-bold mb-2'
             >
               Mật khẩu
             </label>
             <div className='relative'>
               <input
                 id='password'
-                name='password'
                 type={showPassword ? 'text' : 'password'}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className='form-input mt-1 pr-10'
+                {...register('password')}
+                className='w-full px-4 py-3 rounded-lg border-2 border-primary focus:outline-none focus:ring-0'
                 placeholder='••••••••'
               />
               <button
                 type='button'
                 onClick={() => setShowPassword(!showPassword)}
-                className='absolute inset-y-0 right-0 pr-3 flex items-center'
+                className='absolute right-4 top-1/2 -translate-y-1/2'
               >
                 {showPassword ? (
-                  <IoEyeOffOutline className='h-5 w-5 text-gray-400' />
+                  <IoEyeOffOutline className='w-6 h-6 text-primary' />
                 ) : (
-                  <IoEyeOutline className='h-5 w-5 text-gray-400' />
+                  <IoEyeOutline className='w-6 h-6 text-primary' />
                 )}
               </button>
             </div>
+            {errors.password && (
+              <p className='mt-1 text-sm text-red-600'>
+                {errors.password.message}
+              </p>
+            )}
           </div>
         </div>
 
         <div className='flex items-center justify-between'>
-          <div className='flex items-center'>
+          <div className='flex items-center gap-2'>
             <input
               id='remember-me'
               name='remember-me'
               type='checkbox'
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className='h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded'
+              className='w-5 h-5 appearance-none border-2 border-primary rounded checked:bg-primary checked:accent-primary focus:ring-0'
             />
-            <label
-              htmlFor='remember-me'
-              className='ml-2 block text-sm text-gray-900'
-            >
+            <label htmlFor='remember-me' className='text-sm'>
               Lưu phiên đăng nhập
             </label>
           </div>
 
-          <div className='text-sm'>
-            <a
-              href='#'
-              className='font-medium text-primary hover:text-primary-hover'
-            >
-              Quên mật khẩu?
-            </a>
-          </div>
+          <a
+            href='#'
+            className='text-sm text-black hover:underline italic underline'
+          >
+            Quên mật khẩu?
+          </a>
         </div>
 
         <button
@@ -156,41 +184,16 @@ export default function RecruiterLogin() {
           )}
         </button>
 
-        <div className='relative'>
-          <div className='absolute inset-0 flex items-center'>
-            <div className='w-full border-t border-gray-300' />
-          </div>
-          <div className='relative flex justify-center text-sm'>
-            <span className='px-2 bg-white text-gray-500'>HOẶC</span>
-          </div>
-        </div>
-
-        <div className='grid grid-cols-2 gap-3'>
-          <button
-            type='button'
-            className='btn btn-outline flex items-center justify-center gap-2'
-          >
-            <FcGoogle className='w-5 h-5' />
-            <span>Google</span>
-          </button>
-          <button
-            type='button'
-            className='btn btn-outline flex items-center justify-center gap-2 text-[#4267B2]'
-          >
-            <FaFacebook className='w-5 h-5' />
-            <span>Facebook</span>
-          </button>
-        </div>
-
-        <p className='text-center text-sm text-gray-600'>
-          Bạn chưa có tài khoản?{' '}
+        <div className='text-center text-sm'>
+          <span className='text-gray-600'>Bạn chưa có tài khoản? </span>
+          <br />
           <a
             href='/auth/register'
-            className='font-medium text-primary hover:text-primary-hover'
+            className='text-primary hover:underline font-medium'
           >
             Đăng ký
           </a>
-        </p>
+        </div>
       </form>
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>

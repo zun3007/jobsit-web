@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useJobs } from '@/hooks/useJobs';
-import { useAppDispatch } from '@/app/store';
+import { useAppDispatch, useAppSelector } from '@/app/store';
 import { setFilters } from '@/features/jobs/jobSlice';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import SaveButton from '@/components/ui/SaveButton';
@@ -11,10 +11,14 @@ import { IoLocationOutline } from 'react-icons/io5';
 import { IoChevronUpOutline, IoChevronDownOutline } from 'react-icons/io5';
 import { IoPersonOutline } from 'react-icons/io5';
 import { FaRegClock } from 'react-icons/fa';
+import { useSaveJob } from '@/hooks/useSaveJob';
 
 export default function GuestHome() {
   const dispatch = useAppDispatch();
   const { jobs, isLoading } = useJobs();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { savedJobs } = useAppSelector((state) => state.jobs);
+  const { saveJob, unsaveJob } = useSaveJob();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [location, setLocation] = useState('');
@@ -43,6 +47,23 @@ export default function GuestHome() {
         major: selectedMajors.length > 0 ? selectedMajors.join(',') : undefined,
       })
     );
+  };
+
+  const handleSaveJob = async (jobId: number, isSaved: boolean) => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    try {
+      if (isSaved) {
+        await saveJob(jobId);
+      } else {
+        await unsaveJob(jobId);
+      }
+    } catch (error) {
+      console.error('Error saving/unsaving job:', error);
+    }
   };
 
   if (isLoading) {
@@ -254,45 +275,45 @@ export default function GuestHome() {
                     <input
                       type='checkbox'
                       className='w-5 h-5 appearance-none rounded-md border border-[#00B074] accent-[#00B074] checked:text-white focus:ring-[#00B074] checked:bg-[#00B074] checked:before:content-["✔"] checked:before:text-white checked:before:flex checked:before:items-center checked:before:justify-center checked:before:text-sm checked:before:font-bold checked:before:scale-x-125'
-                      checked={selectedMajors.includes('Khoa học máy tính')}
+                      checked={selectedMajors.includes('Công nghệ thông tin')}
                       onChange={(e) => {
                         if (e.target.checked) {
                           setSelectedMajors([
                             ...selectedMajors,
-                            'Khoa học máy tính',
+                            'Công nghệ thông tin',
                           ]);
                         } else {
                           setSelectedMajors(
                             selectedMajors.filter(
-                              (major) => major !== 'Khoa học máy tính'
+                              (major) => major !== 'Công nghệ thông tin'
                             )
                           );
                         }
                       }}
                     />
-                    <span>Khoa học máy tính</span>
+                    <span>Công nghệ thông tin</span>
                   </label>
                   <label className='flex items-center gap-2'>
                     <input
                       type='checkbox'
                       className='w-5 h-5 appearance-none rounded-md border border-[#00B074] accent-[#00B074] checked:text-white focus:ring-[#00B074] checked:bg-[#00B074] checked:before:content-["✔"] checked:before:text-white checked:before:flex checked:before:items-center checked:before:justify-center checked:before:text-sm checked:before:font-bold checked:before:scale-x-125'
-                      checked={selectedMajors.includes('Công nghệ phần mềm')}
+                      checked={selectedMajors.includes('Kỹ thuật phần mềm')}
                       onChange={(e) => {
                         if (e.target.checked) {
                           setSelectedMajors([
                             ...selectedMajors,
-                            'Công nghệ phần mềm',
+                            'Kỹ thuật phần mềm',
                           ]);
                         } else {
                           setSelectedMajors(
                             selectedMajors.filter(
-                              (major) => major !== 'Công nghệ phần mềm'
+                              (major) => major !== 'Kỹ thuật phần mềm'
                             )
                           );
                         }
                       }}
                     />
-                    <span>Công nghệ phần mềm</span>
+                    <span>Kỹ thuật phần mềm</span>
                   </label>
                   <label className='flex items-center gap-2'>
                     <input
@@ -413,7 +434,10 @@ export default function GuestHome() {
 
                     {/* Right Side Info */}
                     <div className='flex flex-col items-end justify-between'>
-                      <SaveButton onToggle={() => setShowAuthModal(true)} />
+                      <SaveButton
+                        defaultSaved={savedJobs.includes(job.id)}
+                        onToggle={(saved) => handleSaveJob(job.id, saved)}
+                      />
                       <div className='text-right'>
                         <div className='flex items-center justify-end text-gray-500 gap-1 text-sm'>
                           <IoPersonOutline className='w-4 h-4 text-[#00B074]' />

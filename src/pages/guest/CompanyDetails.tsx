@@ -1,19 +1,35 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useAppSelector } from '@/app/store';
 import { companyService } from '@/services/companyService';
 import { jobService } from '@/services/jobService';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import SaveButton from '@/components/ui/SaveButton';
 import RequireAuthModal from '@/components/auth/RequireAuthModal';
-import { IoSearch } from 'react-icons/io5';
-import { IoLocationOutline } from 'react-icons/io5';
+import {
+  IoLocationOutline,
+  IoGlobeOutline,
+  IoMailOutline,
+  IoPeopleOutline,
+  IoSearchOutline,
+  IoLocationSharp,
+  IoChevronBack,
+  IoChevronForward,
+  IoTime,
+} from 'react-icons/io5';
+import { useSaveJob } from '@/hooks/useSaveJob';
+import { useToast } from '@/hooks/useToast';
 
 export default function CompanyDetails() {
   const { id } = useParams<{ id: string }>();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { saveJob, unsaveJob } = useSaveJob();
+  const { showError } = useToast();
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [location, setLocation] = useState('');
+  const [activeTab, setActiveTab] = useState<'details' | 'overview'>('details');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 6;
 
   const { data: company, isLoading: isLoadingCompany } = useQuery({
     queryKey: ['company', id],
@@ -21,257 +37,471 @@ export default function CompanyDetails() {
     enabled: !!id,
   });
 
-  const { data: jobs, isLoading: isLoadingJobs } = useQuery({
-    queryKey: ['company-jobs', id],
-    queryFn: () => jobService.getCompanyJobs(Number(id)),
+  const { data: savedJobs } = useQuery({
+    queryKey: ['saved-jobs'],
+    queryFn: () => jobService.getSavedJobs(),
+    enabled: isAuthenticated,
+  });
+
+  // Update to use the real jobs data with pagination
+  const { data: jobsData, isLoading: isLoadingJobs } = useQuery({
+    queryKey: ['company-jobs', id, currentPage],
+    queryFn: async () => {
+      const response = await jobService.getActiveJobsByCompany(Number(id));
+      return {
+        jobs: response.contents,
+        totalItems: response.totalItems,
+        totalPages: Math.ceil(response.totalItems / ITEMS_PER_PAGE),
+      };
+    },
     enabled: !!id,
   });
 
-  const handleApplyJob = () => {
-    setShowAuthModal(true);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    document
+      .getElementById('available-jobs')
+      ?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  if (isLoadingCompany || isLoadingJobs || !company) {
+  const handleApplyJob = () => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    // Handle job application for authenticated users
+  };
+
+  const handleSaveJob = async (jobId: number, isSaved: boolean) => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    try {
+      if (isSaved) {
+        await saveJob(jobId);
+      } else {
+        await unsaveJob(jobId);
+      }
+    } catch (error) {
+      console.error('Error saving/unsaving job:', error);
+      showError('Có lỗi xảy ra. Vui lòng thử lại sau.');
+    }
+  };
+
+  const extractCity = (location: string) => {
+    const parts = location.split(',').map((part) => part.trim());
+    // Get the last part which should be the city
+    return parts[parts.length - 1];
+  };
+
+  if (isLoadingCompany || !company) {
     return <LoadingSpinner />;
   }
 
   return (
     <div className='min-h-screen bg-gray-50'>
-      {/* Company Header */}
-      <div className='bg-white border-b border-[#DEDEDE]'>
-        <div className='container mx-auto px-4 py-8'>
-          <div className='max-w-4xl mx-auto'>
-            <div className='flex gap-6'>
-              {/* Company Logo */}
-              <div className='w-[120px] h-[120px] border rounded-lg overflow-hidden flex-shrink-0'>
-                <img
-                  src={company.logo || '/company-placeholder.png'}
-                  alt={company.name}
-                  className='w-full h-full object-contain p-2'
+      {/* Search Bar */}
+      <div className='bg-white border-b border-[#DEDEDE] py-4'>
+        <div className='container mx-auto px-4'>
+          <div className='flex gap-4 items-center'>
+            <div className='flex-1 flex gap-4'>
+              {/* Job Search Input */}
+              <div className='relative w-full'>
+                <IoSearchOutline className='absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#00B074]' />
+                <input
+                  type='text'
+                  placeholder='Tìm kiếm việc làm'
+                  className='w-full pl-12 pr-4 py-2.5 border border-[#DEDEDE] rounded focus:outline-none focus:border-[#00B074]'
                 />
               </div>
-
-              {/* Company Info */}
-              <div className='flex-1'>
-                <h1 className='text-2xl font-bold'>{company.name}</h1>
-                <div className='flex items-center gap-4 mt-4'>
-                  <div className='flex items-center gap-2'>
-                    <span className='text-gray-500'>Địa điểm:</span>
-                    <span>{company.location}</span>
-                  </div>
-                  <div className='flex items-center gap-2'>
-                    <span className='text-gray-500'>Quy mô:</span>
-                    <span>{company.size}</span>
-                  </div>
-                </div>
+              {/* Location Input */}
+              <div className='relative w-full'>
+                <IoLocationSharp className='absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#00B074]' />
+                <input
+                  type='text'
+                  placeholder='Địa điểm'
+                  className='w-full pl-12 pr-4 py-2.5 border border-[#DEDEDE] rounded focus:outline-none focus:border-[#00B074]'
+                />
               </div>
             </div>
+            {/* Search Button */}
+            <button className='px-8 py-2.5 bg-[#00B074] text-white rounded hover:bg-[#00915F] font-medium min-w-[120px]'>
+              Tìm kiếm
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Company Content */}
-      <div className='container mx-auto px-4 py-8'>
-        <div className='max-w-4xl mx-auto'>
-          <div className='bg-white rounded-lg p-6 border border-[#DEDEDE] space-y-6 mb-6'>
-            <div>
-              <h2 className='text-xl font-bold mb-4'>Giới thiệu công ty</h2>
-              <div
-                className='prose max-w-none'
-                dangerouslySetInnerHTML={{ __html: company.description }}
-              />
-            </div>
+      <div className='container mx-auto px-4 py-6'>
+        <div className='border border-[#00B074] rounded-lg p-6'>
+          {/* Company Card */}
+          <div className='bg-white rounded-lg border border-[#DEDEDE] p-6 mb-6'>
+            <div className='flex flex-col md:flex-row items-start md:items-center gap-6'>
+              {/* Logo */}
+              <div className='w-[140px] h-[140px] flex-shrink-0'>
+                <img
+                  src={company.logo || '/company-placeholder.png'}
+                  alt={company.name}
+                  className='w-full h-full object-contain rounded'
+                />
+              </div>
 
-            <div>
-              <h2 className='text-xl font-bold mb-4'>Thông tin liên hệ</h2>
-              <div className='space-y-2'>
-                <div className='flex items-center gap-2'>
-                  <span className='text-gray-500'>Website:</span>
-                  <a
-                    href={company.website}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='text-primary hover:underline'
-                  >
-                    {company.website}
-                  </a>
+              {/* Info */}
+              <div className='flex-1'>
+                <h1 className='text-2xl md:text-3xl font-bold mb-2'>
+                  {company.name}
+                </h1>
+                <div className='flex items-center gap-2 text-gray-700 mb-4'>
+                  <IoLocationOutline className='w-5 h-5 text-[#00B074]' />
+                  <span className='text-sm md:text-base'>
+                    {company.location}
+                  </span>
                 </div>
-                <div className='flex items-center gap-2'>
-                  <span className='text-gray-500'>Email:</span>
-                  <span>{company.email}</span>
+
+                {/* Tags */}
+                <div className='flex flex-wrap gap-2'>
+                  {jobsData?.jobs.reduce(
+                    (tags, job) => {
+                      // Collect unique positions
+                      job.positionDTOs.forEach((pos) => {
+                        if (!tags.positions.has(pos.name)) {
+                          tags.positions.add(pos.name);
+                        }
+                      });
+                      // Collect unique schedules
+                      job.scheduleDTOs.forEach((schedule) => {
+                        if (!tags.schedules.has(schedule.name)) {
+                          tags.schedules.add(schedule.name);
+                        }
+                      });
+                      // Collect unique majors
+                      job.majorDTOs.forEach((major) => {
+                        if (!tags.majors.has(major.name)) {
+                          tags.majors.add(major.name);
+                        }
+                      });
+                      return tags;
+                    },
+                    {
+                      positions: new Set<string>(),
+                      schedules: new Set<string>(),
+                      majors: new Set<string>(),
+                    }
+                  )?.positions &&
+                    [
+                      ...jobsData.jobs.reduce((tags, job) => {
+                        job.positionDTOs.forEach((pos) => tags.add(pos.name));
+                        job.scheduleDTOs.forEach((schedule) =>
+                          tags.add(schedule.name)
+                        );
+                        job.majorDTOs.forEach((major) => tags.add(major.name));
+                        return tags;
+                      }, new Set<string>()),
+                    ].map((tag) => (
+                      <span
+                        key={tag}
+                        className='px-3 py-1 bg-gray-100 rounded text-sm text-gray-600'
+                      >
+                        {tag}
+                      </span>
+                    ))}
                 </div>
-                {company.phone && (
-                  <div className='flex items-center gap-2'>
-                    <span className='text-gray-500'>Điện thoại:</span>
-                    <span>{company.phone}</span>
-                  </div>
-                )}
+              </div>
+
+              {/* Actions */}
+              <div className='flex flex-col gap-2 w-full md:w-auto'>
+                <button
+                  onClick={handleApplyJob}
+                  className='px-8 py-2 bg-[#00B074] text-white rounded hover:bg-[#00915F] font-medium'
+                >
+                  ỨNG TUYỂN NGAY
+                </button>
+                <SaveButton
+                  defaultSaved={savedJobs?.some(
+                    (saved) => saved.id === Number(id)
+                  )}
+                  onToggle={(isSaved) => handleSaveJob(Number(id), isSaved)}
+                  className='w-full md:w-auto'
+                />
               </div>
             </div>
           </div>
 
-          {/* Search and Jobs Section */}
-          <div className='flex gap-8'>
-            {/* Filters */}
-            <div className='w-[300px] space-y-6'>
-              <div className='bg-white rounded-lg p-6 border border-[#DEDEDE]'>
-                <h3 className='font-bold mb-4'>Hình thức làm việc</h3>
-                <div className='space-y-2'>
-                  <label className='flex items-center gap-2'>
-                    <input
-                      type='checkbox'
-                      className='rounded border-gray-300'
-                    />
-                    <span>Full time</span>
-                  </label>
-                  <label className='flex items-center gap-2'>
-                    <input
-                      type='checkbox'
-                      className='rounded border-gray-300'
-                    />
-                    <span>Part time</span>
-                  </label>
-                  <label className='flex items-center gap-2'>
-                    <input
-                      type='checkbox'
-                      className='rounded border-gray-300'
-                    />
-                    <span>Remote</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className='bg-white rounded-lg p-6 border border-[#DEDEDE]'>
-                <h3 className='font-bold mb-4'>Vị trí làm việc</h3>
-                <div className='space-y-2'>
-                  <label className='flex items-center gap-2'>
-                    <input
-                      type='checkbox'
-                      className='rounded border-gray-300'
-                    />
-                    <span>Front end</span>
-                  </label>
-                  <label className='flex items-center gap-2'>
-                    <input
-                      type='checkbox'
-                      className='rounded border-gray-300'
-                    />
-                    <span>Back end</span>
-                  </label>
-                  <label className='flex items-center gap-2'>
-                    <input
-                      type='checkbox'
-                      className='rounded border-gray-300'
-                    />
-                    <span>Fullstack</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className='bg-white rounded-lg p-6 border border-[#DEDEDE]'>
-                <h3 className='font-bold mb-4'>Chuyên ngành</h3>
-                <div className='space-y-2'>
-                  <label className='flex items-center gap-2'>
-                    <input
-                      type='checkbox'
-                      className='rounded border-gray-300'
-                    />
-                    <span>Khoa học máy tính</span>
-                  </label>
-                  <label className='flex items-center gap-2'>
-                    <input
-                      type='checkbox'
-                      className='rounded border-gray-300'
-                    />
-                    <span>Công nghệ phần mềm</span>
-                  </label>
-                </div>
-              </div>
+          {/* Tabs */}
+          <div className='border-b border-[#DEDEDE] mb-6'>
+            <div className='flex gap-8'>
+              <button
+                className={`pb-4 font-medium relative ${
+                  activeTab === 'details'
+                    ? 'text-[#00B074] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#00B074]'
+                    : 'text-gray-600 hover:text-[#00B074]'
+                }`}
+                onClick={() => setActiveTab('details')}
+              >
+                CHI TIẾT
+              </button>
+              <button
+                className={`pb-4 font-medium relative ${
+                  activeTab === 'overview'
+                    ? 'text-[#00B074] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#00B074]'
+                    : 'text-gray-600 hover:text-[#00B074]'
+                }`}
+                onClick={() => setActiveTab('overview')}
+              >
+                TỔNG QUAN CÔNG TY
+              </button>
             </div>
+          </div>
 
-            {/* Jobs List with Search */}
-            <div className='flex-1'>
-              {/* Search Box */}
-              <div className='bg-white rounded-lg p-4 border border-[#DEDEDE] mb-6'>
-                <div className='flex gap-4'>
-                  <div className='flex-1 relative'>
-                    <IoSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5' />
-                    <input
-                      type='text'
-                      placeholder='Tìm kiếm theo vị trí làm việc'
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className='w-full pl-10 pr-4 py-2 border border-[#DEDEDE] rounded focus:outline-none focus:border-primary'
+          {/* Content */}
+          {activeTab === 'details' ? (
+            <div className='space-y-6'>
+              {/* Description and Info */}
+              <div className='flex gap-6'>
+                {/* Left Column - Company Description */}
+                <div className='flex-1'>
+                  <div className='bg-white rounded-lg border border-[#DEDEDE] p-6'>
+                    <h2 className='text-xl font-bold mb-4'>
+                      Giới thiệu về {company.name}
+                    </h2>
+                    <div
+                      className='prose max-w-none text-gray-700'
+                      dangerouslySetInnerHTML={{ __html: company.description }}
                     />
                   </div>
-                  <div className='flex-1 relative'>
-                    <IoLocationOutline className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5' />
-                    <input
-                      type='text'
-                      placeholder='Khu vực'
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      className='w-full pl-10 pr-4 py-2 border border-[#DEDEDE] rounded focus:outline-none focus:border-primary'
-                    />
-                  </div>
-                  <button className='px-8 py-2 bg-primary text-white rounded hover:bg-primary-hover whitespace-nowrap'>
-                    Tìm kiếm
-                  </button>
                 </div>
-              </div>
 
-              {/* Jobs List */}
-              <div className='space-y-4'>
-                <h2 className='text-xl font-bold'>Việc làm đang tuyển</h2>
-                {jobs?.map((job) => (
-                  <div
-                    key={job.id}
-                    className='bg-white rounded-lg p-6 border border-[#DEDEDE]'
-                  >
-                    <div className='flex gap-4'>
-                      <div className='flex-1'>
-                        <Link
-                          to={`/jobs/${job.id}`}
-                          className='text-lg font-bold hover:text-primary'
-                        >
-                          {job.name}
-                        </Link>
-                        <div className='flex items-center gap-2 mt-2'>
-                          <span className='text-sm text-gray-500'>
-                            {job.location}
-                          </span>
-                          <span className='text-sm text-gray-500'>•</span>
-                          <span className='text-sm text-gray-500'>
-                            {job.scheduleDTOs.map((s) => s.name).join(', ')}
-                          </span>
+                {/* Right Column - Company Info & Image */}
+                <div className='w-[400px] flex-shrink-0'>
+                  <div className='border border-[#00B074] rounded-lg'>
+                    {/* Company Image */}
+                    <div className='p-6 border-b border-[#DEDEDE]'>
+                      <img
+                        src={company.logo || '/company-placeholder.png'}
+                        alt={company.name}
+                        className='w-full aspect-square object-contain'
+                      />
+                      <div className='text-center text-gray-500 mt-2'>
+                        Resource Software Solution
+                      </div>
+                    </div>
+
+                    {/* Company Info */}
+                    <div className='divide-y divide-[#DEDEDE]'>
+                      <div className='px-6 py-4 flex items-center gap-3'>
+                        <div className='w-8 h-8 rounded-full bg-[#E6F6F1] flex items-center justify-center flex-shrink-0'>
+                          <IoGlobeOutline className='w-5 h-5 text-[#00B074]' />
                         </div>
-                        <div className='flex gap-2 mt-2'>
-                          {job.majorDTOs.map((major) => (
-                            <span
-                              key={major.id}
-                              className='px-2 py-1 text-xs bg-gray-100 rounded'
-                            >
-                              {major.name}
-                            </span>
-                          ))}
+                        <div>
+                          <div className='text-gray-500'>Website</div>
+                          <a
+                            href={company.website}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='text-[#00B074] hover:underline'
+                          >
+                            r2s.com.vn
+                          </a>
                         </div>
                       </div>
-
-                      <div className='flex flex-col gap-2'>
-                        <button
-                          onClick={handleApplyJob}
-                          className='px-6 py-2 bg-primary text-white rounded hover:bg-primary-hover whitespace-nowrap'
-                        >
-                          ỨNG TUYỂN NGAY
-                        </button>
-                        <SaveButton onToggle={() => setShowAuthModal(true)} />
+                      <div className='px-6 py-4 flex items-center gap-3'>
+                        <div className='w-8 h-8 rounded-full bg-[#E6F6F1] flex items-center justify-center flex-shrink-0'>
+                          <IoMailOutline className='w-5 h-5 text-[#00B074]' />
+                        </div>
+                        <div>
+                          <div className='text-gray-500'>Email</div>
+                          <div>tuyendung@r2s.com</div>
+                        </div>
+                      </div>
+                      <div className='px-6 py-4 flex items-center gap-3'>
+                        <div className='w-8 h-8 rounded-full bg-[#E6F6F1] flex items-center justify-center flex-shrink-0'>
+                          <IoPeopleOutline className='w-5 h-5 text-[#00B074]' />
+                        </div>
+                        <div>
+                          <div className='text-gray-500'>Quy mô</div>
+                          <div>30 - 100 người</div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                ))}
+                </div>
+              </div>
+
+              {/* Company Location */}
+              <div>
+                <h2 className='text-xl font-bold mb-4'>Địa điểm công ty</h2>
+                <div className='flex items-center gap-2 text-gray-700'>
+                  <IoLocationOutline className='w-5 h-5 text-[#00B074]' />
+                  <span>
+                    1164 đường Phạm Văn Đồng, P.Linh Đông, TP. Thủ Đức, TP. HCM
+                  </span>
+                </div>
+              </div>
+
+              {/* Jobs Available */}
+              <div id='available-jobs'>
+                <h2 className='text-xl font-bold mb-4'>
+                  Việc làm khác đang tuyển ({jobsData?.totalItems || 0})
+                </h2>
+                {isLoadingJobs ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <div className='grid grid-cols-2 gap-4'>
+                      {jobsData?.jobs.map((job) => (
+                        <div
+                          key={job.id}
+                          className='bg-white rounded border border-[#DEDEDE] p-4 hover:shadow-sm transition-shadow'
+                        >
+                          <div className='flex gap-4'>
+                            {/* Company Logo */}
+                            <div className='w-[60px] h-[60px] flex-shrink-0'>
+                              <img
+                                src={company.logo || '/company-placeholder.png'}
+                                alt={company.name}
+                                className='w-full h-full object-contain'
+                              />
+                            </div>
+
+                            {/* Job Info */}
+                            <div className='flex-1 min-w-0'>
+                              {/* Title and Save Button */}
+                              <div className='flex justify-between items-start gap-2'>
+                                <div className='min-w-0'>
+                                  <h3 className='text-[#00B074] font-medium hover:text-[#00915F] truncate'>
+                                    {job.name}
+                                  </h3>
+                                  <p className='text-sm text-gray-500 mt-0.5'>
+                                    {job.companyDTO.name}
+                                  </p>
+                                </div>
+                                <SaveButton
+                                  defaultSaved={savedJobs?.some(
+                                    (saved) => saved.id === job.id
+                                  )}
+                                  onToggle={(isSaved) =>
+                                    handleSaveJob(job.id, isSaved)
+                                  }
+                                  className='flex-shrink-0'
+                                />
+                              </div>
+
+                              {/* Tags */}
+                              <div className='flex flex-wrap gap-1.5 mt-2'>
+                                {job.positionDTOs.map((position) => (
+                                  <span
+                                    key={position.id}
+                                    className='px-3 py-1 bg-[#F8F9FA] text-gray-600 text-xs rounded'
+                                  >
+                                    {position.name}
+                                  </span>
+                                ))}
+                                {job.scheduleDTOs.map((schedule) => (
+                                  <span
+                                    key={schedule.id}
+                                    className='px-3 py-1 bg-[#F8F9FA] text-gray-600 text-xs rounded'
+                                  >
+                                    {schedule.name}
+                                  </span>
+                                ))}
+                                {job.majorDTOs.map((major) => (
+                                  <span
+                                    key={major.id}
+                                    className='px-3 py-1 bg-[#F8F9FA] text-gray-600 text-xs rounded'
+                                  >
+                                    {major.name}
+                                  </span>
+                                ))}
+                              </div>
+
+                              {/* Bottom Info */}
+                              <div className='flex items-center justify-between gap-4 mt-3'>
+                                <div className='flex items-center gap-1 text-xs text-gray-500'>
+                                  <IoPeopleOutline className='w-4 h-4 text-[#00B074]' />
+                                  <span>Số lượng: {job.amount}</span>
+                                </div>
+                                <div>
+                                  <div className='flex items-center gap-1 text-xs text-gray-500'>
+                                    <IoLocationOutline className='w-4 h-4 text-[#00B074]' />
+                                    <span>{extractCity(job.location)}</span>
+                                  </div>
+                                  <div className='flex items-center gap-1 mt-1 text-xs text-gray-500'>
+                                    <IoTime className='w-4 h-4 text-[#00B074]' />
+                                    <span>
+                                      {new Date(
+                                        job.startDate
+                                      ).toLocaleDateString('vi-VN')}{' '}
+                                      -{' '}
+                                      {new Date(job.endDate).toLocaleDateString(
+                                        'vi-VN'
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Pagination */}
+                    {(jobsData?.totalPages || 0) >= 1 && (
+                      <div className='flex justify-center mt-6 gap-2'>
+                        <button
+                          className='w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 disabled:opacity-50'
+                          disabled={currentPage === 1}
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          aria-label='Previous page'
+                        >
+                          <IoChevronBack className='w-4 h-4' />
+                        </button>
+                        {Array.from(
+                          { length: jobsData?.totalPages || 0 },
+                          (_, i) => i + 1
+                        ).map((page) => (
+                          <button
+                            key={page}
+                            onClick={() => handlePageChange(page)}
+                            className={`
+                              w-8 h-8 rounded-full text-sm font-medium transition-colors
+                              ${
+                                page === currentPage
+                                  ? 'rounded-full border border-[#00B074] text-slate-900'
+                                  : 'text-slate-700 rounded-full hover:border hover:border-[#00B074] hover:text-slate-900'
+                              }
+                            `}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                        <button
+                          className='w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 disabled:opacity-50'
+                          disabled={currentPage === (jobsData?.totalPages || 0)}
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          aria-label='Next page'
+                        >
+                          <IoChevronForward className='w-4 h-4' />
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
-          </div>
+          ) : (
+            <div className='bg-white rounded-lg border border-[#DEDEDE] p-6'>
+              <h2 className='text-xl font-bold mb-4'>
+                Tổng quan về {company.name}
+              </h2>
+              <div
+                className='prose max-w-none text-gray-700'
+                dangerouslySetInnerHTML={{ __html: company.description }}
+              />
+            </div>
+          )}
         </div>
       </div>
 

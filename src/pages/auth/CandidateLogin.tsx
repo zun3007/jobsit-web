@@ -8,28 +8,38 @@ import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
 import { AxiosError } from 'axios';
 import ToastContainer from '@/components/ui/ToastContainer';
 import Spinner from '@/components/ui/Spinner';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const schema = z.object({
+  email: z.string().email('Email không hợp lệ'),
+  password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+});
+
+type FormData = z.infer<typeof schema>;
 
 export default function CandidateLogin() {
   const navigate = useNavigate();
   const { login, isLoggingIn } = useAuth();
   const { toasts, showError, removeToast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
 
-    if (!email || !password) {
-      showError('Vui lòng nhập đầy đủ thông tin đăng nhập.');
-      return;
-    }
-
+  const onSubmit = async (data: FormData) => {
     try {
       const result = await login({
-        email,
-        password,
+        email: data.email,
+        password: data.password,
       });
 
       if (result?.token) {
@@ -53,13 +63,37 @@ export default function CandidateLogin() {
       {/* Header */}
       <div className='text-center mb-4'>
         <h2 className='text-[24px] font-bold text-gray-900'>ĐĂNG NHẬP</h2>
-        <div className='inline-block bg-[#F3BD50] text-white rounded-md px-4 py-1 text-sm font-medium mt-2'>
-          ỨNG VIÊN
+        <div className='relative inline-block'>
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className='inline-flex items-center gap-2 bg-[#F3BD50] text-white rounded-md px-4 py-1 text-sm font-medium mt-2'
+          >
+            ỨNG VIÊN
+          </button>
+
+          {isDropdownOpen && (
+            <div className='absolute left-1/2 transform -translate-x-1/2 z-10 mt-1 w-[220px] bg-white border border-gray-200 rounded-md shadow-lg'>
+              <div className='py-1'>
+                <a
+                  href='/auth/candidate'
+                  className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                >
+                  Ứng viên
+                </a>
+                <a
+                  href='/auth/recruiter'
+                  className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                >
+                  Nhà tuyển dụng/ Cộng tác viên
+                </a>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Login Form */}
-      <form className='space-y-6' onSubmit={handleSubmit}>
+      <form className='space-y-6' onSubmit={handleSubmit(onSubmit)}>
         <div className='space-y-5'>
           <div>
             <label htmlFor='email' className='block text-base font-bold mb-2'>
@@ -67,14 +101,16 @@ export default function CandidateLogin() {
             </label>
             <input
               id='email'
-              name='email'
               type='email'
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              {...register('email')}
               className='w-full px-4 py-3 rounded-lg border-2 border-primary focus:outline-none focus:ring-0'
               placeholder='example@email.com'
             />
+            {errors.email && (
+              <p className='mt-1 text-sm text-red-600'>
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           <div>
@@ -87,11 +123,8 @@ export default function CandidateLogin() {
             <div className='relative'>
               <input
                 id='password'
-                name='password'
                 type={showPassword ? 'text' : 'password'}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                {...register('password')}
                 className='w-full px-4 py-3 rounded-lg border-2 border-primary focus:outline-none focus:ring-0'
                 placeholder='••••••••'
               />
@@ -107,6 +140,11 @@ export default function CandidateLogin() {
                 )}
               </button>
             </div>
+            {errors.password && (
+              <p className='mt-1 text-sm text-red-600'>
+                {errors.password.message}
+              </p>
+            )}
           </div>
         </div>
 

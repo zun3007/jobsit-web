@@ -7,31 +7,40 @@ import { useToast } from '@/hooks/useToast';
 import Spinner from '@/components/ui/Spinner';
 import { AxiosError } from 'axios';
 import ToastContainer from '@/components/ui/ToastContainer';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 interface RequireAuthModalProps {
   onClose: () => void;
 }
 
+const schema = z.object({
+  email: z.string().email('Email không hợp lệ'),
+  password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+});
+
+type FormData = z.infer<typeof schema>;
+
 export default function RequireAuthModal({ onClose }: RequireAuthModalProps) {
   const { login, isLoggingIn } = useAuth();
   const { toasts, showError, removeToast } = useToast();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
 
-    if (!email || !password) {
-      showError('Vui lòng nhập đầy đủ thông tin đăng nhập.');
-      return;
-    }
-
+  const onSubmit = async (data: FormData) => {
     try {
       const result = await login({
-        email,
-        password,
+        email: data.email,
+        password: data.password,
       });
 
       if (result?.token) {
@@ -65,7 +74,7 @@ export default function RequireAuthModal({ onClose }: RequireAuthModalProps) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className='p-16 pt-8'>
+        <form onSubmit={handleSubmit(onSubmit)} className='p-16 pt-8'>
           <div className='space-y-6'>
             <div>
               <label htmlFor='email' className='block text-base font-bold mb-2'>
@@ -74,12 +83,15 @@ export default function RequireAuthModal({ onClose }: RequireAuthModalProps) {
               <input
                 id='email'
                 type='email'
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                {...register('email')}
                 className='w-full px-4 py-3 rounded border-2 border-[#00B074] focus:outline-none focus:ring-0'
                 placeholder='example@email.com'
-                required
               />
+              {errors.email && (
+                <p className='mt-1 text-sm text-red-600'>
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -93,11 +105,9 @@ export default function RequireAuthModal({ onClose }: RequireAuthModalProps) {
                 <input
                   id='password'
                   type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  {...register('password')}
                   className='w-full px-4 py-3 rounded border-2 border-[#00B074] focus:outline-none focus:ring-0 pr-12'
                   placeholder='••••••••'
-                  required
                 />
                 <button
                   type='button'
@@ -111,6 +121,11 @@ export default function RequireAuthModal({ onClose }: RequireAuthModalProps) {
                   )}
                 </button>
               </div>
+              {errors.password && (
+                <p className='mt-1 text-sm text-red-600'>
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
             <div className='flex items-center justify-between'>

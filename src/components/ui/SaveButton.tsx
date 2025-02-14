@@ -24,7 +24,7 @@ export default function SaveButton({
     <button
       onClick={handleToggle}
       className={`
-        inline-flex items-center gap-1.5 
+        inline-flex items-center justify-center gap-1.5 
         px-3 sm:px-8 py-1.5 sm:py-2
         rounded-[3px] border transition-all duration-200
         min-w-[90px] sm:min-w-[100px]
