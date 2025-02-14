@@ -34,7 +34,7 @@ export default function Header() {
             Đăng nhập
           </Link>
           <Link
-            to='/auth/register'
+            to='/auth/candidate/register'
             className='px-6 py-2 bg-primary text-white rounded hover:bg-primary-hover transition-colors'
           >
             Đăng ký

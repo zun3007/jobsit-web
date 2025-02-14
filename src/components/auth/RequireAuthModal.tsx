@@ -196,7 +196,7 @@ export default function RequireAuthModal({ onClose }: RequireAuthModalProps) {
             <div className='text-center text-sm'>
               <span className='text-gray-600'>Bạn chưa có tài khoản? </span>
               <Link
-                to='/auth/register'
+                to='/auth/candidate/register'
                 className='text-[#00B074] hover:underline font-medium'
               >
                 Đăng ký ngay

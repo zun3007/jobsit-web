@@ -1,5 +1,10 @@
-import { axiosInstance, PaginatedResponse, handleApiError } from './api';
-import { Job } from './jobService';
+import {
+  axiosInstance,
+  PaginatedResponse,
+  handleApiError,
+  extractErrorMessage,
+} from './api';
+import { Job } from '@/features/jobs/jobSlice';
 
 export interface Candidate {
   id: number;
@@ -41,6 +46,17 @@ export interface ApplicationFilters {
   status?: 'PENDING' | 'ACCEPTED' | 'REJECTED';
   no: number;
   limit: number;
+}
+
+export interface RegisterCandidateRequest {
+  userCreationDTO: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phone?: string;
+  };
+  candidateOtherInfoDTO: null;
 }
 
 export const candidateService = {
@@ -117,6 +133,14 @@ export const candidateService = {
       return response.data;
     } catch (error) {
       return handleApiError(error);
+    }
+  },
+
+  async register(data: RegisterCandidateRequest): Promise<void> {
+    try {
+      await axiosInstance.post('/candidate', data);
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
     }
   },
 };

@@ -31,10 +31,7 @@ export interface UpdateProfileRequest {
 export const authService = {
   async login(data: LoginRequest): Promise<LoginResponse> {
     try {
-      const response = await axiosInstance.post<LoginResponse>(
-        '/auth/login',
-        data
-      );
+      const response = await axiosInstance.post<LoginResponse>('/login', data);
       return response.data;
     } catch (error) {
       return handleApiError(error);

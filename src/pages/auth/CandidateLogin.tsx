@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { FcGoogle } from 'react-icons/fc';
@@ -21,11 +21,12 @@ type FormData = z.infer<typeof schema>;
 
 export default function CandidateLogin() {
   const navigate = useNavigate();
-  const { login, isLoggingIn } = useAuth();
-  const { toasts, showError, removeToast } = useToast();
+  const { login } = useAuth();
+  const { toasts, showError, showSuccess, removeToast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -36,22 +37,23 @@ export default function CandidateLogin() {
   });
 
   const onSubmit = async (data: FormData) => {
+    setIsLoading(true);
+
     try {
-      const result = await login({
+      await login({
         email: data.email,
         password: data.password,
       });
-
-      if (result?.token) {
-        navigate('/candidate/dashboard');
+      showSuccess('Đăng nhập thành công');
+      navigate('/');
+    } catch (error: any) {
+      if (error?.message) {
+        showError(error.message);
+      } else {
+        showError('Đã xảy ra lỗi khi đăng nhập');
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      if (error instanceof AxiosError && error.response?.data?.message) {
-        showError(error.response.data.message);
-        return;
-      }
-      showError('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -74,18 +76,18 @@ export default function CandidateLogin() {
           {isDropdownOpen && (
             <div className='absolute left-1/2 transform -translate-x-1/2 z-10 mt-1 w-[220px] bg-white border border-gray-200 rounded-md shadow-lg'>
               <div className='py-1'>
-                <a
-                  href='/auth/candidate'
+                <Link
+                  to='/auth/candidate'
                   className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 >
                   Ứng viên
-                </a>
-                <a
-                  href='/auth/recruiter'
+                </Link>
+                <Link
+                  to='/auth/recruiter'
                   className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 >
                   Nhà tuyển dụng/ Cộng tác viên
-                </a>
+                </Link>
               </div>
             </div>
           )}
@@ -173,10 +175,10 @@ export default function CandidateLogin() {
 
         <button
           type='submit'
-          disabled={isLoggingIn}
+          disabled={isLoading}
           className='w-full bg-primary text-white rounded-lg py-3 font-medium hover:bg-primary/90 transition-colors'
         >
-          {isLoggingIn ? (
+          {isLoading ? (
             <div className='flex items-center justify-center gap-2'>
               <Spinner size='sm' variant='white' />
               <span>ĐANG ĐĂNG NHẬP...</span>
@@ -215,12 +217,12 @@ export default function CandidateLogin() {
         <div className='text-center text-sm'>
           <span className='text-gray-600'>Bạn chưa có tài khoản? </span>
           <br />
-          <a
-            href='/auth/register'
+          <Link
+            to='/auth/candidate/register'
             className='text-primary hover:underline font-medium'
           >
             Đăng ký
-          </a>
+          </Link>
         </div>
       </form>
       <ToastContainer toasts={toasts} onRemove={removeToast} />

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
@@ -72,18 +72,18 @@ export default function CandidateLogin() {
           {isDropdownOpen && (
             <div className='absolute left-1/2 transform -translate-x-1/2 z-10 mt-1 w-[220px] bg-white border border-gray-200 rounded-md shadow-lg'>
               <div className='py-1'>
-                <a
-                  href='/auth/candidate'
+                <Link
+                  to='/auth/candidate'
                   className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 >
                   Ứng viên
-                </a>
-                <a
-                  href='/auth/recruiter'
+                </Link>
+                <Link
+                  to='/auth/recruiter'
                   className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 >
                   Nhà tuyển dụng/ Cộng tác viên
-                </a>
+                </Link>
               </div>
             </div>
           )}

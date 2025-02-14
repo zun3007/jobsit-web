@@ -48,7 +48,7 @@ export default function Navbar({ color = 'green' }) {
             {/* Language Selector */}
             <button className='flex items-center gap-2 text-gray-600 hover:text-gray-900'>
               <img
-                src='/vn-flag.png'
+                src='/vn_flag.svg'
                 alt='VN'
                 className='w-6 h-6 rounded-full object-cover'
               />
@@ -71,7 +71,7 @@ export default function Navbar({ color = 'green' }) {
                   Đăng nhập
                 </Link>
                 <Link
-                  to='/auth/register'
+                  to='/auth/candidate/register'
                   className='text-gray-800 font-bold hover:text-[#00B074] transition-colors'
                 >
                   Đăng ký

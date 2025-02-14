@@ -14,8 +14,8 @@ export default function AuthLayout() {
   return (
     <>
       <Navbar color='yellow' />
-      <div className='min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8'>
-        <div className='max-w-md w-full space-y-8'>
+      <div className='min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8'>
+        <div className='max-w-7xl space-x-8 w-full flex justify-center'>
           <Suspense fallback={<LoadingSpinner />}>
             <Outlet />
           </Suspense>

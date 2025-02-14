@@ -21,7 +21,7 @@ export default function ToastContainer({
     <div
       aria-live='polite'
       aria-atomic='true'
-      className='fixed top-4 right-4 z-50 flex flex-col items-end space-y-4'
+      className='fixed bottom-14 right-4 z-50 flex flex-col items-end space-y-4'
     >
       {toasts.map((toast) => (
         <Toast
