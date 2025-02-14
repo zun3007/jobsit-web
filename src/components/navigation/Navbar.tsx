@@ -3,7 +3,7 @@ import { useAppSelector } from '@/app/store';
 import Dropdown from '@/components/ui/Dropdown';
 import { IoChevronDown } from 'react-icons/io5';
 
-export default function Navbar() {
+export default function Navbar({ color = 'green' }) {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
 
   return (
@@ -14,9 +14,9 @@ export default function Navbar() {
           <div className='flex items-center gap-8'>
             <Link to='/' className='flex items-center'>
               <img
-                src={isAuthenticated ? '/logo_yellow.svg' : '/logo.svg'}
+                src={color === 'green' ? '/logo.svg' : '/logo_yellow.svg'}
                 alt='IT Jobs'
-                className='h-8'
+                className='max-h-14'
               />
             </Link>
             {isAuthenticated && (
@@ -66,13 +66,13 @@ export default function Navbar() {
               <div className='flex items-center gap-4'>
                 <Link
                   to='/auth/candidate'
-                  className='text-gray-600 hover:text-[#00B074] transition-colors'
+                  className='text-gray-800 font-bold hover:text-[#00B074] transition-colors'
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to='/auth/register'
-                  className='text-gray-600 hover:text-[#00B074] transition-colors'
+                  className='text-gray-800 font-bold hover:text-[#00B074] transition-colors'
                 >
                   Đăng ký
                 </Link>
