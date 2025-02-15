@@ -1,48 +1,61 @@
-import { axiosInstance } from './api';
+import { axiosInstance, handleApiError } from './api';
 import { Job } from '@/features/jobs/jobSlice';
 
 export interface Application {
   id: number;
-  job: Job;
+  jobDTO: Job;
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
   createdAt: string;
   updatedAt: string;
+  cv: string;
+  referenceLetter: string;
+  appliedDate: string;
 }
 
 export interface ApplicationResponse {
   contents: Application[];
-  totalPages: number;
   totalItems: number;
-  limit: number;
-  no: number;
-  first: boolean;
-  last: boolean;
+  totalPages: number;
 }
 
 export const applicationService = {
-  getCandidateApplications: async (): Promise<ApplicationResponse> => {
-    const response = await axiosInstance.get('/api/candidate-applications');
-    return response.data;
+  async getCandidateApplications(
+    page: number = 0,
+    limit: number = 5
+  ): Promise<ApplicationResponse> {
+    try {
+      const response = await axiosInstance.get<ApplicationResponse>(
+        `/candidate-application/candidate`,
+        {
+          params: {
+            no: page,
+            limit,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
   },
 
-  applyForJob: async (jobId: number, cvFile: File): Promise<Application> => {
-    const formData = new FormData();
-    formData.append('jobId', jobId.toString());
-    formData.append('cvFile', cvFile);
-
-    const response = await axiosInstance.post(
-      '/api/candidate-applications',
-      formData,
-      {
+  async applyForJob(formData: FormData): Promise<void> {
+    try {
+      await axiosInstance.post('/candidate-application', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-      }
-    );
-    return response.data;
+      });
+    } catch (error) {
+      return handleApiError(error);
+    }
   },
 
-  withdrawApplication: async (applicationId: number): Promise<void> => {
-    await axiosInstance.delete(`/api/candidate-applications/${applicationId}`);
+  async withdrawApplication(applicationId: number): Promise<void> {
+    try {
+      await axiosInstance.delete(`/candidate-application/${applicationId}`);
+    } catch (error) {
+      return handleApiError(error);
+    }
   },
 };

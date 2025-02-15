@@ -20,6 +20,8 @@ import { useSaveJob } from '@/hooks/useSaveJob';
 import { useAppSelector } from '@/app/store';
 import { useToast } from '@/hooks/useToast';
 import { AxiosError } from 'axios';
+import ApplicationModal from '@/components/application/ApplicationModal';
+import { useCandidates } from '@/hooks/useCandidates';
 
 export default function JobDetails() {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +35,8 @@ export default function JobDetails() {
   const { saveJob, unsaveJob, isSaving } = useSaveJob();
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const { showError } = useToast();
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const { profile } = useCandidates();
 
   const { data: job, isLoading } = useQuery({
     queryKey: ['job', id],
@@ -68,7 +72,7 @@ export default function JobDetails() {
       setShowAuthModal(true);
       return;
     }
-    navigate('/application');
+    setShowApplicationModal(true);
   };
 
   const formatBulletPoints = (text: string) => {
@@ -769,6 +773,18 @@ export default function JobDetails() {
       {/* Auth Modal */}
       {showAuthModal && (
         <RequireAuthModal onClose={() => setShowAuthModal(false)} />
+      )}
+
+      {/* Application Modal */}
+      {showApplicationModal && (
+        <ApplicationModal
+          jobId={Number(id)}
+          onClose={() => setShowApplicationModal(false)}
+          defaultCV={profile?.candidateOtherInfoDTO?.cv}
+          defaultReferenceLetter={
+            profile?.candidateOtherInfoDTO?.referenceLetter
+          }
+        />
       )}
     </div>
   );

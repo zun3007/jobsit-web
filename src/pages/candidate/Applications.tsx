@@ -1,45 +1,43 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { jobService } from '@/services/jobService';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { applicationService } from '@/services/applicationService';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import SaveButton from '@/components/ui/SaveButton';
-import { useSaveJob } from '@/hooks/useSaveJob';
-import { useToast } from '@/hooks/useToast';
-import { queryKeys } from '@/lib/react-query';
+import { Link } from 'react-router-dom';
 import {
   IoLocationOutline,
   IoPersonOutline,
   IoChevronBack,
   IoChevronForward,
+  IoDocumentTextOutline,
 } from 'react-icons/io5';
 import { FaRegClock } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
-import { useState } from 'react';
 
-export default function SavedJobs() {
-  const { showError } = useToast();
-  const { saveJob, unsaveJob, isSaving } = useSaveJob();
+export default function Applications() {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const queryClient = useQueryClient();
+  const itemsPerPage = 5;
 
-  const { data: savedJobs, isLoading } = useQuery({
-    queryKey: queryKeys.jobs.saved(),
-    queryFn: jobService.getSavedJobs,
-  });
-
-  const handleSaveJob = async (jobId: number, isSaved: boolean) => {
+  const formatDateTime = (dateString: string) => {
+    if (!dateString) return '';
     try {
-      if (isSaved) {
-        await saveJob(jobId);
-      } else {
-        await unsaveJob(jobId);
-      }
-      // Invalidate and refetch saved jobs after successful save/unsave
-      await queryClient.invalidateQueries({ queryKey: ['savedJobs'] });
+      const [date, time] = dateString.split(' ');
+      const [day, month, year] = date.split('-');
+      const [hour, minute] = time.split(':');
+      return `${day}/${month}/${year} ${hour}:${minute}`;
     } catch {
-      showError('Đã có lỗi xảy ra. Vui lòng thử lại sau.');
+      return new Date(dateString).toLocaleString('vi-VN');
     }
   };
+
+  const { data: applications, isLoading } = useQuery({
+    queryKey: ['applications', currentPage - 1, itemsPerPage],
+    queryFn: () =>
+      applicationService.getCandidateApplications(
+        currentPage - 1,
+        itemsPerPage
+      ),
+  });
+
+  console.log(applications);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -49,10 +47,7 @@ export default function SavedJobs() {
     return <LoadingSpinner />;
   }
 
-  const totalPages = Math.ceil((savedJobs?.length || 0) / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentJobs = savedJobs?.slice(startIndex, endIndex) || [];
+  const totalPages = applications?.totalPages || 0;
 
   return (
     <div className='container mx-auto px-4 py-8'>
@@ -62,50 +57,57 @@ export default function SavedJobs() {
           {/* Info Box */}
           <div className='bg-[#00B074] text-white rounded-lg p-6 mb-8'>
             <h1 className='text-2xl font-bold mb-2'>
-              Danh sách việc làm đã lưu
+              Danh sách việc làm đã ứng tuyển
             </h1>
             <p>
-              Xem lại danh sách những việc làm mà bạn đã lưu trước đó. Ứng tuyển
-              ngay để không bỏ lỡ cơ hội nghề nghiệp dành cho bạn.
+              Xem lại danh sách những việc làm mà bạn đã ứng tuyển. Theo dõi
+              trạng thái ứng tuyển và cập nhật thông tin khi cần thiết.
             </p>
           </div>
 
-          {/* Saved Jobs Count */}
+          {/* Applications Count */}
           <p className='text-gray-600 mb-6'>
-            Bạn đã quan tâm{' '}
-            <span className='font-bold'>{savedJobs?.length || 0}</span> việc làm
+            Bạn đã ứng tuyển{' '}
+            <span className='font-bold'>{applications?.totalItems || 0}</span>{' '}
+            việc làm
           </p>
 
-          {/* Empty State or Job List */}
-          {!savedJobs?.length ? (
+          {/* Empty State or Applications List */}
+          {!applications?.contents?.length ? (
             <div className='bg-white rounded-lg p-8'>
               <div className='text-center'>
                 <img
                   src='/empty_box.svg'
-                  alt='No saved jobs'
+                  alt='No applications'
                   className='w-48 h-48 mx-auto mb-4'
                 />
                 <p className='text-lg font-medium mb-2'>
-                  Bạn chưa quan tâm công việc nào!
+                  Bạn chưa ứng tuyển công việc nào!
+                </p>
+                <p className='text-gray-500'>
+                  Hãy tìm kiếm và ứng tuyển các công việc phù hợp với bạn.
                 </p>
               </div>
             </div>
           ) : (
             <div className='space-y-4'>
-              {currentJobs.map((job) => (
+              {applications.contents.map((application) => (
                 <div
-                  key={job.id}
-                  className='bg-white rounded-lg p-6 border border-[#DEDEDE] hover:border-[#00B074] transition-colors'
+                  key={application.id}
+                  className='bg-white rounded-lg p-6 pb-4 border border-[#DEDEDE]'
                 >
                   <div className='flex gap-6'>
                     {/* Company Logo */}
                     <Link
-                      to={`/companies/${job.companyDTO.id}`}
+                      to={`/companies/${application.jobDTO.companyDTO.id}`}
                       className='w-[100px] h-[100px] border rounded-lg overflow-hidden flex-shrink-0'
                     >
                       <img
-                        src={job.companyDTO.logo || '/company-placeholder.png'}
-                        alt={job.companyDTO.name}
+                        src={
+                          application.jobDTO.companyDTO.logo ||
+                          '/company_logo_temp.svg'
+                        }
+                        alt={application.jobDTO.companyDTO.name}
                         className='w-full h-full object-contain p-2'
                       />
                     </Link>
@@ -113,28 +115,25 @@ export default function SavedJobs() {
                     {/* Job Info */}
                     <div className='flex-1'>
                       <Link
-                        to={`/jobs/${job.id}`}
+                        to={`/jobs/${application.jobDTO.id}`}
                         className='text-lg font-bold text-[#00B074] transition-colors'
                       >
-                        {job.name}
+                        {application.jobDTO.name}
                       </Link>
                       <Link
-                        to={`/companies/${job.companyDTO.id}`}
+                        to={`/companies/${application.jobDTO.companyDTO.id}`}
                         className='block text-gray-600 hover:text-[#00B074] transition-colors'
                       >
-                        {job.companyDTO.name}
+                        {application.jobDTO.companyDTO.name}
                       </Link>
                       <div className='flex items-center gap-2 mt-2'>
                         <IoLocationOutline className='w-4 h-4 text-[#00B074]' />
                         <span className='text-sm text-gray-500'>
-                          {job.location}
-                        </span>
-                        <span className='text-sm text-gray-500'>
-                          {job.scheduleDTOs.map((s) => s.name).join(', ')}
+                          {application.jobDTO.location}
                         </span>
                       </div>
                       <div className='flex flex-wrap gap-2 mt-2'>
-                        {job.majorDTOs.map((major) => (
+                        {application.jobDTO.majorDTOs.map((major) => (
                           <span
                             key={major.id}
                             className='px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded'
@@ -147,26 +146,50 @@ export default function SavedJobs() {
 
                     {/* Right Side Info */}
                     <div className='flex flex-col items-end justify-between'>
-                      <SaveButton
-                        jobId={job.id}
-                        onToggle={(saved) => handleSaveJob(job.id, saved)}
-                        isLoading={isSaving}
-                      />
-                      <div className='text-right'>
+                      <div className='flex items-center gap-2 mb-4'>
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm ${
+                            application.status === 'PENDING'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : application.status === 'ACCEPTED'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {application.status === 'PENDING'
+                            ? 'Đang chờ'
+                            : application.status === 'ACCEPTED'
+                            ? 'Đã chấp nhận'
+                            : 'Đã từ chối'}
+                        </span>
+                      </div>
+                      <div className='text-right space-y-3'>
                         <div className='flex items-center justify-end text-gray-500 gap-1 text-sm'>
                           <IoPersonOutline className='w-4 h-4 text-[#00B074]' />
-                          <span>Số lượng ứng viên: {job.amount}</span>
-                        </div>
-                        <div className='flex items-center justify-end gap-1 text-sm text-gray-500 mt-1'>
-                          <FaRegClock className='w-4 h-4 text-[#00B074]' />
                           <span>
-                            {new Date(job.startDate).toLocaleDateString(
-                              'vi-VN'
-                            )}{' '}
-                            -{' '}
-                            {new Date(job.endDate).toLocaleDateString('vi-VN')}
+                            Số lượng ứng viên: {application.jobDTO.amount}
                           </span>
                         </div>
+                        <div className='flex items-center justify-end gap-1 text-sm text-gray-500'>
+                          <FaRegClock className='w-4 h-4 text-[#00B074]' />
+                          <span>
+                            Ngày ứng tuyển:{' '}
+                            {formatDateTime(application.appliedDate)}
+                          </span>
+                        </div>
+                        {application.cv && (
+                          <div className='flex items-center justify-end gap-1 text-sm'>
+                            <a
+                              href={application.cv}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                              className='inline-flex items-center gap-2 px-4 py-2 bg-[#E6F6F1] text-[#00B074] rounded-lg hover:bg-[#d4f0e8] transition-colors'
+                            >
+                              <IoDocumentTextOutline className='w-4 h-4' />
+                              Xem CV
+                            </a>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

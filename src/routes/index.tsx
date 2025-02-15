@@ -6,6 +6,7 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { Roles } from '@/types';
 import VerifyOTP from '@/pages/auth/VerifyOTP';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
+import Applications from '@/pages/candidate/Applications';
 
 // Lazy load pages
 const CandidateLogin = lazy(() => import('@/pages/auth/CandidateLogin'));
@@ -31,7 +32,7 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute roles={[Roles.CANDIDATE]} />,
         children: [
           { path: 'dashboard', element: <CandidateDashboard /> },
-          { path: 'applications', element: <CandidateDashboard /> },
+          { path: 'applications', element: <Applications /> },
           { path: 'saved-jobs', element: <SavedJobs /> },
           { path: 'profile', element: <CandidateDashboard /> },
           { path: 'update-profile', element: <UpdateProfile /> },

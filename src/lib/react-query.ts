@@ -38,6 +38,14 @@ export const queryKeys = {
     ],
     saved: () => [...queryKeys.jobs.root, 'saved'],
   },
+  applications: {
+    root: ['applications'],
+    all: (page?: number, limit?: number) => [
+      ...queryKeys.applications.root,
+      'all',
+      { page, limit },
+    ],
+  },
   candidates: {
     root: ['candidates'],
     profile: (id: string) => [...queryKeys.candidates.root, 'profile', id],
