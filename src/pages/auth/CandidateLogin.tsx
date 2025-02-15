@@ -165,12 +165,12 @@ export default function CandidateLogin() {
             </label>
           </div>
 
-          <a
-            href='#'
+          <Link
+            to='/auth/candidate/forgot-password'
             className='text-sm text-black hover:underline italic underline'
           >
             Quên mật khẩu?
-          </a>
+          </Link>
         </div>
 
         <button

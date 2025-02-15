@@ -115,7 +115,18 @@ export const authService = {
 
   async forgotPassword(email: string): Promise<void> {
     try {
-      await axiosInstance.post(`/user/forgot-password/${email}`);
+      await axiosInstance.get(`/user/forgot-password/${email}`);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+
+  async changePasswordByOTP(otp: string, newPassword: string): Promise<void> {
+    try {
+      await axiosInstance.post('/user/change-password-by-otp', {
+        otp,
+        newPassword,
+      });
     } catch (error) {
       return handleApiError(error);
     }

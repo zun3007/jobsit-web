@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '@/hooks/useToast';
 import { authService } from '@/services/authService';
 import { AxiosError } from 'axios';
@@ -11,6 +11,7 @@ export default function VerifyOTP() {
   const [isLoading, setIsLoading] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [showResendModal, setShowResendModal] = useState(false);
+  const [searchParams] = useSearchParams();
   const inputRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
@@ -23,9 +24,21 @@ export default function VerifyOTP() {
   const { toasts, showSuccess, showError, removeToast } = useToast();
 
   useEffect(() => {
-    // Focus first input on mount
-    inputRefs[0].current?.focus();
-  }, []);
+    // Check for OTP in URL
+    const otpFromUrl = searchParams.get('OTP');
+    if (otpFromUrl?.length === 6 && /^\d+$/.test(otpFromUrl)) {
+      // Set OTP digits
+      const otpDigits = otpFromUrl.split('');
+      setOtp(otpDigits);
+      // Auto verify after a short delay to allow state to update
+      setTimeout(() => {
+        handleVerify(otpFromUrl);
+      }, 100);
+    } else {
+      // Focus first input if no valid OTP in URL
+      inputRefs[0].current?.focus();
+    }
+  }, [searchParams]);
 
   const handleChange = (index: number, value: string) => {
     // Allow only numbers
@@ -38,6 +51,15 @@ export default function VerifyOTP() {
     // Auto focus next input
     if (value && index < 5) {
       inputRefs[index + 1].current?.focus();
+    }
+
+    // Auto submit when all digits are filled
+    if (value && index === 5) {
+      // Use newOtp instead of the state to get the latest value
+      const otpValue = newOtp.join('');
+      if (otpValue.length === 6) {
+        handleVerify(otpValue);
+      }
     }
   };
 
@@ -70,18 +92,23 @@ export default function VerifyOTP() {
     // Focus last filled input or first empty input
     const lastIndex = Math.min(pastedData.length - 1, 5);
     inputRefs[lastIndex].current?.focus();
+
+    // Auto submit if all digits are filled
+    if (pastedData.length === 6) {
+      handleVerify(pastedData);
+    }
   };
 
-  const handleVerify = async () => {
-    const otpValue = otp.join('');
-    if (otpValue.length !== 6) {
+  const handleVerify = async (otpValue?: string) => {
+    const codeToVerify = otpValue || otp.join('');
+    if (codeToVerify.length !== 6) {
       showError('Vui lòng nhập đủ 6 số OTP');
       return;
     }
 
     try {
       setIsLoading(true);
-      await authService.verifyOTP(otpValue);
+      await authService.verifyOTP(codeToVerify);
       showSuccess('Xác thực email thành công');
       navigate('/auth/candidate');
     } catch (error) {
@@ -91,7 +118,7 @@ export default function VerifyOTP() {
             'Xác thực không thành công. Vui lòng thử lại.'
         );
       } else {
-        showError('Có lỗi xảy ra. Vui lòng thử lại sau.');
+        showError(error?.message);
       }
     } finally {
       setIsLoading(false);
@@ -128,7 +155,7 @@ export default function VerifyOTP() {
           </div>
 
           <button
-            onClick={handleVerify}
+            onClick={() => handleVerify()}
             disabled={isLoading}
             className='w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
           >
