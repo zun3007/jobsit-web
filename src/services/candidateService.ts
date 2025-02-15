@@ -6,22 +6,67 @@ import {
 } from './api';
 import { Job } from '@/features/jobs/jobSlice';
 
-export interface Candidate {
+interface RoleDTO {
   id: number;
-  userId: number;
+  name: string;
+}
+
+interface StatusDTO {
+  id: number;
+  name: string;
+}
+
+interface UserDTO {
+  id: number;
   email: string;
   firstName: string;
   lastName: string;
-  phone?: string;
-  gender?: number;
-  avatar?: string;
-  cv?: string;
-  about?: string;
-  education?: string;
-  experience?: string;
-  skills?: string;
-  createdAt: string;
-  updatedAt: string;
+  gender: number | null;
+  birthDay: string | null;
+  phone: string | null;
+  avatar: string | null;
+  location: string | null;
+  mailReceive: boolean;
+  roleDTO: RoleDTO;
+  statusDTO: StatusDTO;
+}
+
+interface UniversityDTO {
+  id: number;
+  name: string;
+}
+
+interface PositionDTO {
+  id: number;
+  name: string;
+}
+
+interface MajorDTO {
+  id: number;
+  name: string;
+}
+
+interface ScheduleDTO {
+  id: number;
+  name: string;
+}
+
+interface CandidateOtherInfoDTO {
+  universityDTO: UniversityDTO | null;
+  referenceLetter: string | null;
+  searchable: boolean;
+  positionDTOs: PositionDTO[];
+  majorDTOs: MajorDTO[];
+  scheduleDTOs: ScheduleDTO[];
+  desiredJob: string | null;
+  desiredWorkingProvince: string | null;
+  cv: string | null;
+}
+
+export interface Candidate {
+  id: number;
+  userDTO: UserDTO;
+  candidateOtherInfoDTO: CandidateOtherInfoDTO;
 }
 
 export interface Application {
@@ -60,9 +105,11 @@ export interface RegisterCandidateRequest {
 }
 
 export const candidateService = {
-  async getProfile(): Promise<Candidate> {
+  async getProfile(userId: number): Promise<Candidate> {
     try {
-      const response = await axiosInstance.get<Candidate>('/candidate/profile');
+      const response = await axiosInstance.get<Candidate>(
+        `/candidate/user/${userId}`
+      );
       return response.data;
     } catch (error) {
       return handleApiError(error);

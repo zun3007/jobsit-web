@@ -2,9 +2,20 @@ import { Link } from 'react-router-dom';
 import { useAppSelector } from '@/app/store';
 import Dropdown from '@/components/ui/Dropdown';
 import { IoChevronDown, IoShieldCheckmarkOutline } from 'react-icons/io5';
+import { useCandidates } from '@/hooks/useCandidates';
 
-export default function Navbar({ color = 'green' }) {
-  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+interface NavbarProps {
+  color?: 'green' | 'yellow';
+}
+
+export default function Navbar({ color = 'green' }: NavbarProps) {
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { profile } = useCandidates();
+
+  // Get full name for dropdown from profile
+  const fullName = profile
+    ? `${profile.userDTO.lastName} ${profile.userDTO.firstName}`
+    : '';
 
   return (
     <nav className='bg-white border-b border-[#DEDEDE] h-[72px] sticky top-0 z-50'>
@@ -58,8 +69,8 @@ export default function Navbar({ color = 'green' }) {
             {isAuthenticated ? (
               /* User Dropdown */
               <Dropdown
-                userName={`${user?.firstName} ${user?.lastName}`}
-                userImage={user?.avatar}
+                userName={fullName}
+                userImage={profile?.userDTO?.avatar || undefined}
               />
             ) : (
               /* Auth Buttons */

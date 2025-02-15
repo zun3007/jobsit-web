@@ -1,249 +1,300 @@
-import { useAuth } from '@/hooks/useAuth';
 import { useCandidates } from '@/hooks/useCandidates';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import SaveButton from '@/components/ui/SaveButton';
+import { Link } from 'react-router-dom';
 import { IoCreateOutline } from 'react-icons/io5';
+import Switch from '@/components/ui/Switch';
 
 export default function CandidateDashboard() {
-  const { profile } = useAuth();
-  const {
-    applications,
-    recommendedJobs,
-    isLoadingApplications,
-    isLoadingRecommendedJobs,
-  } = useCandidates();
+  const { profile, isLoadingApplications, isLoadingRecommendedJobs } =
+    useCandidates();
 
   if (isLoadingApplications || isLoadingRecommendedJobs) {
     return <LoadingSpinner />;
   }
 
-  // Check if profile is complete
-  const isProfileComplete = Boolean(
-    profile?.firstName &&
-      profile?.lastName &&
-      profile?.email &&
-      profile?.phone &&
-      profile?.gender !== undefined &&
-      profile?.avatar
-  );
-
-  // Dynamic styles based on profile completion
-  const themeColor = isProfileComplete ? 'secondary' : 'primary';
-  const headerBgColor = isProfileComplete ? 'bg-[#00B074]' : 'bg-[#FFB13B]';
-  const cardBorderColor = isProfileComplete
-    ? 'border-[#00B074]'
-    : 'border-[#FFB13B]';
-
   return (
-    <div className='min-h-screen bg-gray-50'>
-      {/* Profile Header */}
-      <div className={`${headerBgColor} text-white py-8`}>
-        <div className='container mx-auto px-4'>
-          <div className='flex items-center gap-6'>
-            <div className='relative'>
-              <img
-                src={profile?.avatar || '/default-avatar.png'}
-                alt={profile?.firstName}
-                className='w-32 h-32 rounded-full object-cover border-4 border-white'
-              />
-              {!isProfileComplete && (
-                <div className='absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white text-[#FFB13B] px-3 py-1 rounded-full text-sm font-medium shadow-md'>
-                  Chưa hoàn thiện
+    <div className='bg-gray-50 py-8'>
+      <div className='container mx-auto px-4'>
+        <div className='flex flex-col lg:flex-row gap-8'>
+          {/* Left Sidebar - Profile Card */}
+          <div className='lg:w-[450px]'>
+            <div className='bg-white rounded-lg p-6 text-center border-2 border-[#00B074] shadow-[0_0_4px_rgba(0,0,0,0.1)]'>
+              {/* Avatar Section */}
+              <div className='my-16'>
+                <div className='relative max-w-44 max-h-44 mx-auto rounded-full border-2 border-[#00B074]'>
+                  <img
+                    src={profile?.userDTO?.avatar || '/default-avatar.svg'}
+                    alt={profile?.userDTO?.firstName}
+                    className='w-full h-full rounded-full object-cover'
+                  />
                 </div>
-              )}
-            </div>
-            <div>
-              <h1 className='text-2xl font-bold mb-2'>
-                {profile?.firstName} {profile?.lastName}
-              </h1>
-              <p className='text-white/90 mb-4'>{profile?.email}</p>
-              <button
-                className={`inline-flex items-center gap-2 px-4 py-2 bg-white ${
-                  isProfileComplete ? 'text-[#00B074]' : 'text-[#FFB13B]'
-                } rounded-lg font-medium hover:bg-gray-50 transition-colors`}
-              >
-                <IoCreateOutline className='w-5 h-5' />
-                Chỉnh sửa hồ sơ
-              </button>
+                <h2 className='text-3xl font-bold text-[#00B074] mt-16'>
+                  {profile?.userDTO?.lastName} {profile?.userDTO?.firstName}
+                </h2>
+              </div>
+
+              {/* Divider */}
+              <div className='border-t border-gray-200 my-6'></div>
+
+              {/* Toggle Switches */}
+              <div className='space-y-6 p-3'>
+                <div>
+                  <div className='flex items-center justify-between mb-2 text-start'>
+                    <p className='text-base font-medium text-[#00B074]'>
+                      Cho phép nhà tuyển dụng tìm kiếm hồ sơ trực tuyến của bạn
+                    </p>
+                    <Switch
+                      checked={
+                        profile?.candidateOtherInfoDTO?.searchable || false
+                      }
+                      onChange={() => {}}
+                    />
+                  </div>
+                  <p className='text-sm text-gray-500 italic text-start'>
+                    Cho phép nhà tuyển dụng chủ động tìm kiếm hồ sơ của bạn để
+                    có thêm nhiều cơ hội việc làm tốt từ IT Jobs.
+                  </p>
+                </div>
+
+                <div>
+                  <div className='flex items-center justify-between mb-2 text-start'>
+                    <p className='text-base font-medium text-[#00B074]'>
+                      Nhận thông báo về email
+                    </p>
+                    <Switch
+                      checked={profile?.userDTO?.mailReceive || false}
+                      onChange={() => {}}
+                    />
+                  </div>
+                  <p className='text-sm text-gray-500 italic text-start'>
+                    Hãy bật thông báo để bạn không bỏ lỡ bất kỳ thông tin nào.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className='container mx-auto px-4 py-8'>
-        {/* Profile Information */}
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8'>
-          <div
-            className={`bg-white rounded-lg shadow-sm border ${cardBorderColor}`}
-          >
-            <div className='p-6'>
-              <div className='flex items-center justify-between mb-6'>
-                <h2 className='text-xl font-bold'>Thông tin cá nhân</h2>
-                <button
-                  className={`text-${themeColor} hover:underline`}
-                  aria-label='Chỉnh sửa thông tin cá nhân'
+          {/* Main Content Area */}
+          <div className='flex-1 space-y-8'>
+            {/* Personal Information */}
+            <div className='bg-white rounded-lg shadow-[0_0_15px_rgba(0,0,0,0.1)]'>
+              <div className='bg-[#00B074] py-4 px-6 flex items-center justify-between rounded-t-lg'>
+                <h2 className='text-xl font-semibold text-white'>
+                  Thông tin cá nhân
+                </h2>
+                <Link
+                  to='/candidate/profile'
+                  className='text-white hover:text-white/80 transition-colors'
                 >
-                  <IoCreateOutline className='w-5 h-5' />
-                </button>
+                  <IoCreateOutline className='w-6 h-6' />
+                </Link>
               </div>
-              <div className='grid grid-cols-2 gap-6'>
-                <div>
-                  <p className='text-gray-600 mb-1'>Họ và tên lót</p>
-                  <p className='font-medium'>
-                    {profile?.lastName || '(chưa có dữ liệu)'}
-                  </p>
-                </div>
-                <div>
-                  <p className='text-gray-600 mb-1'>Tên</p>
-                  <p className='font-medium'>
-                    {profile?.firstName || '(chưa có dữ liệu)'}
-                  </p>
-                </div>
-                <div>
-                  <p className='text-gray-600 mb-1'>Email</p>
-                  <p className='font-medium'>{profile?.email}</p>
-                </div>
-                <div>
-                  <p className='text-gray-600 mb-1'>Số điện thoại</p>
-                  <p className='font-medium'>
-                    {profile?.phone || '(chưa có dữ liệu)'}
-                  </p>
-                </div>
-                <div>
-                  <p className='text-gray-600 mb-1'>Giới tính</p>
-                  <p className='font-medium'>
-                    {profile?.gender === 1
-                      ? 'Nam'
-                      : profile?.gender === 0
-                      ? 'Nữ'
-                      : '(chưa có dữ liệu)'}
-                  </p>
-                </div>
-                <div>
-                  <p className='text-gray-600 mb-1'>Ngày sinh</p>
-                  <p className='font-medium'>(chưa có dữ liệu)</p>
+              <div className='p-6'>
+                <div className='grid grid-cols-2 gap-6'>
+                  {/* First Row */}
+                  <div className='flex justify-between items-start gap-8'>
+                    <p className='text-[#333] font-bold w-32'>Họ và tên lót</p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.userDTO?.lastName || <i>(chưa có dữ liệu)</i>}
+                    </p>
+                  </div>
+                  <div className='flex justify-between items-start gap-8'>
+                    <p className='text-[#333] font-bold w-32'>Tên</p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.userDTO?.firstName || <i>(chưa có dữ liệu)</i>}
+                    </p>
+                  </div>
+
+                  {/* Second Row */}
+                  <div className='flex justify-between items-start gap-8'>
+                    <p className='text-[#333] font-bold w-32'>Email</p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.userDTO?.email || <i>(chưa có dữ liệu)</i>}
+                    </p>
+                  </div>
+                  <div className='flex justify-between items-start gap-8'>
+                    <p className='text-[#333] font-bold w-32'>Ngày sinh</p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.userDTO?.birthDay ? (
+                        new Date(profile.userDTO.birthDay).toLocaleDateString(
+                          'vi-VN'
+                        )
+                      ) : (
+                        <i>(chưa có dữ liệu)</i>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Third Row */}
+                  <div className='flex justify-between items-start gap-8'>
+                    <p className='text-[#333] font-bold w-32'>Số điện thoại</p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.userDTO?.phone || <i>(chưa có dữ liệu)</i>}
+                    </p>
+                  </div>
+                  <div className='flex justify-between items-start gap-8'>
+                    <p className='text-[#333] font-bold w-32'>Giới tính</p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.userDTO?.gender === 1 ? (
+                        'Nam'
+                      ) : profile?.userDTO?.gender === 0 ? (
+                        'Nữ'
+                      ) : (
+                        <i>(chưa có dữ liệu)</i>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Fourth Row */}
+                  <div className='flex justify-between items-start gap-8'>
+                    <p className='text-[#333] font-bold w-32'>Tỉnh/Thành phố</p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.userDTO?.location ? (
+                        profile.userDTO.location.split(',').pop()?.trim() || (
+                          <i>(chưa có dữ liệu)</i>
+                        )
+                      ) : (
+                        <i>(chưa có dữ liệu)</i>
+                      )}
+                    </p>
+                  </div>
+                  <div className='flex justify-between items-start gap-8'>
+                    <p className='text-[#333] font-bold w-32'>Quận/Huyện</p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.userDTO?.location ? (
+                        profile.userDTO.location.split(',')[1]?.trim() || (
+                          <i>(chưa có dữ liệu)</i>
+                        )
+                      ) : (
+                        <i>(chưa có dữ liệu)</i>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Full Width Rows */}
+                  <div className='col-span-2 flex justify-between items-start gap-8'>
+                    <p className='text-[#333] font-bold w-32'>Địa chỉ</p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.userDTO?.location ? (
+                        profile.userDTO.location.split(',')[0]?.trim() || (
+                          <i>(chưa có dữ liệu)</i>
+                        )
+                      ) : (
+                        <i>(chưa có dữ liệu)</i>
+                      )}
+                    </p>
+                  </div>
+                  <div className='col-span-2 flex justify-between items-start gap-8'>
+                    <p className='text-[#333] font-bold w-32'>Trường học</p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.candidateOtherInfoDTO?.universityDTO?.name || (
+                        <i>(chưa có dữ liệu)</i>
+                      )}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div
-            className={`bg-white rounded-lg shadow-sm border ${cardBorderColor}`}
-          >
-            <div className='p-6'>
-              <div className='flex items-center justify-between mb-6'>
-                <h2 className='text-xl font-bold'>
+            {/* Job Application Information */}
+            <div className='bg-white rounded-lg shadow-[0_0_15px_rgba(0,0,0,0.1)]'>
+              <div className='flex items-center gap-2 bg-[#00B074] text-white p-4 rounded-t-lg'>
+                <h2 className='text-xl font-semibold'>
                   Thông tin việc muốn ứng tuyển
                 </h2>
-                <button
-                  className={`text-${themeColor} hover:underline`}
-                  aria-label='Chỉnh sửa thông tin ứng tuyển'
+                <Link
+                  to='/candidate/profile'
+                  className='text-white hover:text-white/80 transition-colors ml-auto'
                 >
-                  <IoCreateOutline className='w-5 h-5' />
-                </button>
+                  <IoCreateOutline className='w-6 h-6' />
+                </Link>
               </div>
-              <div className='space-y-4'>
-                <div>
-                  <p className='text-gray-600 mb-1'>Công việc mong muốn</p>
-                  <p className='font-medium'>(chưa có dữ liệu)</p>
-                </div>
-                <div>
-                  <p className='text-gray-600 mb-1'>Vị trí làm việc</p>
-                  <p className='font-medium'>(chưa có dữ liệu)</p>
-                </div>
-                <div>
-                  <p className='text-gray-600 mb-1'>Chuyên ngành</p>
-                  <p className='font-medium'>(chưa có dữ liệu)</p>
-                </div>
-                <div>
-                  <p className='text-gray-600 mb-1'>Hình thức làm việc</p>
-                  <p className='font-medium'>(chưa có dữ liệu)</p>
-                </div>
-                <div>
-                  <p className='text-gray-600 mb-1'>CV đính kèm</p>
-                  <p className='font-medium'>(chưa có dữ liệu)</p>
+              <div className='p-6'>
+                <div className='grid grid-cols-1 gap-4'>
+                  <div className='flex'>
+                    <p className='text-[#333] font-bold w-48'>
+                      Công việc mong muốn
+                    </p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.candidateOtherInfoDTO?.desiredJob || (
+                        <i>(chưa có dữ liệu)</i>
+                      )}
+                    </p>
+                  </div>
+                  <div className='flex'>
+                    <p className='text-[#333] font-bold w-48'>
+                      Vị trí làm việc
+                    </p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.candidateOtherInfoDTO?.positionDTOs
+                        ?.map((pos) => pos.name)
+                        .join('/ ') || <i>(chưa có dữ liệu)</i>}
+                    </p>
+                  </div>
+                  <div className='flex'>
+                    <p className='text-[#333] font-bold w-48'>Chuyên ngành</p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.candidateOtherInfoDTO?.majorDTOs
+                        ?.map((major) => major.name)
+                        .join('/ ') || <i>(chưa có dữ liệu)</i>}
+                    </p>
+                  </div>
+                  <div className='flex'>
+                    <p className='text-[#333] font-bold w-48'>
+                      Hình thức làm việc
+                    </p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.candidateOtherInfoDTO?.scheduleDTOs
+                        ?.map((schedule) => schedule.name)
+                        .join('/ ') || <i>(chưa có dữ liệu)</i>}
+                    </p>
+                  </div>
+                  <div className='flex'>
+                    <p className='text-[#333] font-bold w-48'>
+                      Địa điểm làm việc
+                    </p>
+                    <p className='text-[#666] flex-1'>
+                      {profile?.candidateOtherInfoDTO
+                        ?.desiredWorkingProvince || <i>(chưa có dữ liệu)</i>}
+                    </p>
+                  </div>
+                  <div className='flex'>
+                    <p className='text-[#333] font-bold w-48'>CV đính kèm</p>
+                    <div className='text-[#666] flex-1'>
+                      {profile?.candidateOtherInfoDTO?.cv ? (
+                        <div className='flex items-center gap-2'>
+                          <span className='text-[#00B074]'>
+                            CV_Nguyen Thi Hoa.pdf
+                          </span>
+                          <span className='text-gray-500 text-sm italic'>
+                            (Click để xem)
+                          </span>
+                        </div>
+                      ) : (
+                        <i>(chưa có dữ liệu)</i>
+                      )}
+                    </div>
+                  </div>
+                  <div className='flex'>
+                    <p className='text-[#333] font-bold w-48'>Thư xin việc</p>
+                    <div className='text-[#666] flex-1'>
+                      {profile?.candidateOtherInfoDTO?.referenceLetter ? (
+                        <div className='whitespace-pre-line'>
+                          <p>Dear employer,</p>
+                          <p className='mt-2'>
+                            {profile.candidateOtherInfoDTO.referenceLetter}
+                          </p>
+                          <p className='mt-2'>Scelerisque rutrum,</p>
+                          <p>Hoa Nguyen.</p>
+                        </div>
+                      ) : (
+                        <i>(chưa có dữ liệu)</i>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Recent Applications */}
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200 mb-8'>
-          <div className='p-6'>
-            <h2 className='text-xl font-bold mb-6'>
-              Việc làm đã ứng tuyển gần đây
-            </h2>
-            {applications?.length > 0 ? (
-              <div className='space-y-4'>
-                {applications.slice(0, 3).map((application) => (
-                  <div key={application.id} className='p-4 border rounded-lg'>
-                    <div className='flex justify-between items-start'>
-                      <div>
-                        <h3 className='font-medium'>{application.job.name}</h3>
-                        <p className='text-sm text-gray-600'>
-                          {application.job.companyDTO.name}
-                        </p>
-                      </div>
-                      <span
-                        className={`text-xs px-2 py-1 rounded ${
-                          application.status === 'PENDING'
-                            ? 'bg-primary-light text-primary'
-                            : application.status === 'ACCEPTED'
-                            ? 'bg-secondary-light text-secondary'
-                            : 'bg-red-100 text-red-600'
-                        }`}
-                      >
-                        {application.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className='text-gray-500 text-center py-8'>
-                Bạn chưa ứng tuyển công việc nào
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Recommended Jobs */}
-        <div className='bg-white rounded-lg shadow-sm border border-gray-200'>
-          <div className='p-6'>
-            <h2 className='text-xl font-bold mb-6'>Việc làm phù hợp với bạn</h2>
-            {recommendedJobs?.length > 0 ? (
-              <div className='space-y-4'>
-                {recommendedJobs.slice(0, 3).map((job) => (
-                  <div key={job.id} className='p-4 border rounded-lg'>
-                    <div className='flex justify-between items-start'>
-                      <div>
-                        <h3 className='font-medium'>{job.name}</h3>
-                        <p className='text-sm text-gray-600'>
-                          {job.companyDTO.name} • {job.location}
-                        </p>
-                      </div>
-                      <SaveButton />
-                    </div>
-                    <div className='mt-2 flex gap-2'>
-                      {job.positionDTOs.map((position) => (
-                        <span
-                          key={position.id}
-                          className='text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded'
-                        >
-                          {position.name}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className='text-gray-500 text-center py-8'>
-                Chưa có việc làm phù hợp
-              </p>
-            )}
           </div>
         </div>
       </div>

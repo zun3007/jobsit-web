@@ -1,15 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAppDispatch } from '@/app/store';
+import { useAppDispatch, useAppSelector } from '@/app/store';
 import {
   candidateService,
   UpdateCandidateRequest,
 } from '@/services/candidateService';
 import { queryKeys } from '@/lib/react-query';
-import {
-  setProfile,
-  updateProfile,
-  setError,
-} from '@/features/candidates/candidateSlice';
+import { updateProfile, setError } from '@/features/candidates/candidateSlice';
 import { extractErrorMessage } from '@/services/api';
 import { jobService } from '@/services/jobService';
 import { applicationService } from '@/services/applicationService';
@@ -17,12 +13,13 @@ import { applicationService } from '@/services/applicationService';
 export function useCandidates() {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
+  const { user } = useAppSelector((state) => state.auth);
 
   // Get candidate profile
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
-    queryKey: queryKeys.candidates.profile('me'),
-    queryFn: candidateService.getProfile,
-    enabled: !!localStorage.getItem('token'),
+    queryKey: queryKeys.candidates.profile(user?.id?.toString() || ''),
+    queryFn: () => (user?.id ? candidateService.getProfile(user.id) : null),
+    enabled: !!user?.id && !!localStorage.getItem('token'),
   });
 
   // Update profile mutation
@@ -87,7 +84,7 @@ export function useCandidates() {
   return {
     profile,
     applications: applications?.contents || [],
-    totalApplications: applications?.totalElements || 0,
+    totalApplications: applications?.totalItems || 0,
     recommendedJobs: recommendedJobs?.contents || [],
     isLoadingProfile,
     isLoadingApplications,
