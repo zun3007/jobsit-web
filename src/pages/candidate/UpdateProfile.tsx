@@ -135,15 +135,6 @@ export default function UpdateProfile() {
     }
   }, [profile?.userDTO?.location, setValue]);
 
-  // Format date from DD-MM-YYYY to YYYY-MM-DD for input type="date"
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '';
-    const [day, month, year] = dateStr.split('-');
-    // Ensure year is 4 digits
-    const fullYear = year.length === 2 ? `20${year}` : year.padStart(4, '20');
-    return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-  };
-
   useEffect(() => {
     if (profile) {
       reset({
@@ -180,6 +171,15 @@ export default function UpdateProfile() {
       }
     }
   }, [profile, reset]);
+
+  // Format date from DD-MM-YYYY to YYYY-MM-DD for input type="date"
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '';
+    const [day, month, year] = dateStr.split('-');
+    // Ensure year is 4 digits
+    const fullYear = year.length === 2 ? `20${year}` : year.padStart(4, '20');
+    return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  };
 
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
