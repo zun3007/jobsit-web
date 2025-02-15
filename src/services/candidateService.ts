@@ -79,12 +79,10 @@ export interface Application {
   updatedAt: string;
 }
 
-export interface UpdateCandidateRequest {
-  about?: string;
-  education?: string;
-  experience?: string;
-  skills?: string;
-  cv?: File;
+export interface UpdateCandidateRequest extends FormData {
+  candidateProfileDTO?: string;
+  fileAvatar?: File;
+  fileCV?: File;
 }
 
 export interface ApplicationFilters {
@@ -118,16 +116,23 @@ export const candidateService = {
 
   async updateProfile(data: UpdateCandidateRequest): Promise<Candidate> {
     try {
-      const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined) {
-          formData.append(key, value);
-        }
+      // Get the user ID from localStorage
+      const userId = JSON.parse(localStorage.getItem('user') || '{}').id;
+      if (!userId) {
+        throw new Error('User ID not found');
+      }
+
+      // Log the form data for debugging
+      console.log('Updating profile for user:', userId);
+      console.log('Form data:', {
+        candidateProfileDTO: data.get('candidateProfileDTO'),
+        hasAvatar: !!data.get('fileAvatar'),
+        hasCV: !!data.get('fileCV'),
       });
 
       const response = await axiosInstance.put<Candidate>(
-        '/candidate/profile',
-        formData,
+        `/candidate/${userId}`,
+        data,
         {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -136,6 +141,7 @@ export const candidateService = {
       );
       return response.data;
     } catch (error) {
+      console.error('Profile update error:', error);
       return handleApiError(error);
     }
   },
@@ -188,6 +194,14 @@ export const candidateService = {
       await axiosInstance.post('/candidate', data);
     } catch (error) {
       throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  async updateSearchableStatus(userId: number): Promise<void> {
+    try {
+      await axiosInstance.put(`/candidate/searchable/${userId}`);
+    } catch (error) {
+      return handleApiError(error);
     }
   },
 };

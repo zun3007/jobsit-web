@@ -33,7 +33,17 @@ export interface UpdateJobRequest extends Partial<CreateJobRequest> {}
 export const jobService = {
   async getJobs(filters: JobFilters): Promise<JobResponse> {
     try {
-      const response = await axiosInstance.get<JobResponse>('/job/filter', {
+      // Use /job/filter only when there are actual filter criteria
+      const hasFilters =
+        filters.name ||
+        filters.provinceName ||
+        (filters.scheduleIds && filters.scheduleIds.length > 0) ||
+        (filters.positionIds && filters.positionIds.length > 0) ||
+        (filters.majorIds && filters.majorIds.length > 0);
+
+      const endpoint = hasFilters ? '/job/filter' : '/job';
+
+      const response = await axiosInstance.get<JobResponse>(endpoint, {
         params: filters,
       });
       return response.data;

@@ -81,6 +81,20 @@ export function useCandidates() {
     queryFn: () => jobService.getRecommendedJobs(),
   });
 
+  // Update searchable status mutation
+  const updateSearchableStatusMutation = useMutation({
+    mutationFn: () =>
+      user?.id
+        ? candidateService.updateSearchableStatus(user.id)
+        : Promise.reject('No user ID'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.candidates.root });
+    },
+    onError: (error) => {
+      dispatch(setError(extractErrorMessage(error)));
+    },
+  });
+
   return {
     profile,
     applications: applications?.contents || [],
@@ -91,11 +105,13 @@ export function useCandidates() {
     isLoadingRecommendedJobs,
     applicationsError,
     recommendedJobsError,
-    updateProfile: updateProfileMutation.mutate,
+    updateProfile: updateProfileMutation.mutateAsync,
     applyForJob: applyForJobMutation.mutate,
     withdrawApplication: withdrawApplicationMutation.mutate,
     isUpdatingProfile: updateProfileMutation.isPending,
     isApplying: applyForJobMutation.isPending,
     isWithdrawing: withdrawApplicationMutation.isPending,
+    updateSearchableStatus: updateSearchableStatusMutation.mutateAsync,
+    isUpdatingSearchableStatus: updateSearchableStatusMutation.isPending,
   };
 }

@@ -1,12 +1,77 @@
+import { IoCreateOutline } from 'react-icons/io5';
+import Switch from '@/components/ui/Switch';
 import { useCandidates } from '@/hooks/useCandidates';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Link } from 'react-router-dom';
-import { IoCreateOutline } from 'react-icons/io5';
-import Switch from '@/components/ui/Switch';
 
 export default function CandidateDashboard() {
-  const { profile, isLoadingApplications, isLoadingRecommendedJobs } =
-    useCandidates();
+  const {
+    profile,
+    isLoadingApplications,
+    isLoadingRecommendedJobs,
+    updateProfile,
+    updateSearchableStatus,
+    isUpdatingSearchableStatus,
+  } = useCandidates();
+
+  const handleMailReceiveChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!profile?.userDTO) return;
+
+    const formData = new FormData();
+    const profileData = {
+      userProfileDTO: {
+        lastName: profile.userDTO.lastName,
+        firstName: profile.userDTO.firstName,
+        email: profile.userDTO.email,
+        gender: profile.userDTO.gender,
+        phone: profile.userDTO.phone,
+        birthDay: profile.userDTO.birthDay,
+        avatar: profile.userDTO.avatar,
+        location: profile.userDTO.location,
+        mailReceive: e.target.checked,
+      },
+      candidateOtherInfoDTO: {
+        universityDTO: profile.candidateOtherInfoDTO?.universityDTO || null,
+        cv: profile.candidateOtherInfoDTO?.cv || null,
+        referenceLetter: profile.candidateOtherInfoDTO?.referenceLetter || null,
+        positionDTOs: profile.candidateOtherInfoDTO?.positionDTOs || [],
+        majorDTOs: profile.candidateOtherInfoDTO?.majorDTOs || [],
+        scheduleDTOs: profile.candidateOtherInfoDTO?.scheduleDTOs || [],
+        desiredJob: profile.candidateOtherInfoDTO?.desiredJob || null,
+        desiredWorkingProvince:
+          profile.candidateOtherInfoDTO?.desiredWorkingProvince || null,
+        searchable: profile.candidateOtherInfoDTO?.searchable || false,
+      },
+    };
+
+    formData.append('candidateProfileDTO', JSON.stringify(profileData));
+
+    try {
+      await updateProfile(formData);
+      // The profile should automatically refresh due to queryClient invalidation
+    } catch (error) {
+      console.error('Failed to update mail receive status:', error);
+      // Optionally revert the switch state on error
+      e.target.checked = !e.target.checked;
+    }
+  };
+
+  const handleSearchableChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!profile?.userDTO?.id) return;
+
+    try {
+      await updateSearchableStatus();
+      // The profile will automatically refresh due to queryClient invalidation
+    } catch (error) {
+      console.error('Failed to update searchable status:', error);
+      // Revert the switch state on error
+      e.target.checked = !e.target.checked;
+    }
+  };
 
   if (isLoadingApplications || isLoadingRecommendedJobs) {
     return <LoadingSpinner />;
@@ -47,7 +112,8 @@ export default function CandidateDashboard() {
                       checked={
                         profile?.candidateOtherInfoDTO?.searchable || false
                       }
-                      onChange={() => {}}
+                      onChange={handleSearchableChange}
+                      disabled={isUpdatingSearchableStatus}
                     />
                   </div>
                   <p className='text-sm text-gray-500 italic text-start'>
@@ -63,7 +129,7 @@ export default function CandidateDashboard() {
                     </p>
                     <Switch
                       checked={profile?.userDTO?.mailReceive || false}
-                      onChange={() => {}}
+                      onChange={handleMailReceiveChange}
                     />
                   </div>
                   <p className='text-sm text-gray-500 italic text-start'>
@@ -83,7 +149,7 @@ export default function CandidateDashboard() {
                   Thông tin cá nhân
                 </h2>
                 <Link
-                  to='/candidate/profile'
+                  to='/candidate/update-profile'
                   className='text-white hover:text-white/80 transition-colors'
                 >
                   <IoCreateOutline className='w-6 h-6' />
@@ -115,13 +181,7 @@ export default function CandidateDashboard() {
                   <div className='flex justify-between items-start gap-8'>
                     <p className='text-[#333] font-bold w-32'>Ngày sinh</p>
                     <p className='text-[#666] flex-1'>
-                      {profile?.userDTO?.birthDay ? (
-                        new Date(profile.userDTO.birthDay).toLocaleDateString(
-                          'vi-VN'
-                        )
-                      ) : (
-                        <i>(chưa có dữ liệu)</i>
-                      )}
+                      {profile?.userDTO?.birthDay || <i>(chưa có dữ liệu)</i>}
                     </p>
                   </div>
 
@@ -135,10 +195,12 @@ export default function CandidateDashboard() {
                   <div className='flex justify-between items-start gap-8'>
                     <p className='text-[#333] font-bold w-32'>Giới tính</p>
                     <p className='text-[#666] flex-1'>
-                      {profile?.userDTO?.gender === 1 ? (
-                        'Nam'
-                      ) : profile?.userDTO?.gender === 0 ? (
-                        'Nữ'
+                      {profile?.userDTO?.gender != null ? (
+                        profile.userDTO.gender ? (
+                          'Nam'
+                        ) : (
+                          'Nữ'
+                        )
                       ) : (
                         <i>(chưa có dữ liệu)</i>
                       )}
@@ -203,7 +265,7 @@ export default function CandidateDashboard() {
                   Thông tin việc muốn ứng tuyển
                 </h2>
                 <Link
-                  to='/candidate/profile'
+                  to='/candidate/update-profile'
                   className='text-white hover:text-white/80 transition-colors ml-auto'
                 >
                   <IoCreateOutline className='w-6 h-6' />
@@ -262,14 +324,17 @@ export default function CandidateDashboard() {
                     <p className='text-[#333] font-bold w-48'>CV đính kèm</p>
                     <div className='text-[#666] flex-1'>
                       {profile?.candidateOtherInfoDTO?.cv ? (
-                        <div className='flex items-center gap-2'>
-                          <span className='text-[#00B074]'>
-                            CV_Nguyen Thi Hoa.pdf
-                          </span>
+                        <a
+                          href={profile.candidateOtherInfoDTO.cv}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='flex items-center gap-2 text-[#00B074] hover:text-[#00B074]/80 transition-colors'
+                        >
+                          <span>Xem CV</span>
                           <span className='text-gray-500 text-sm italic'>
                             (Click để xem)
                           </span>
-                        </div>
+                        </a>
                       ) : (
                         <i>(chưa có dữ liệu)</i>
                       )}
@@ -280,12 +345,7 @@ export default function CandidateDashboard() {
                     <div className='text-[#666] flex-1'>
                       {profile?.candidateOtherInfoDTO?.referenceLetter ? (
                         <div className='whitespace-pre-line'>
-                          <p>Dear employer,</p>
-                          <p className='mt-2'>
-                            {profile.candidateOtherInfoDTO.referenceLetter}
-                          </p>
-                          <p className='mt-2'>Scelerisque rutrum,</p>
-                          <p>Hoa Nguyen.</p>
+                          {profile.candidateOtherInfoDTO.referenceLetter}
                         </div>
                       ) : (
                         <i>(chưa có dữ liệu)</i>

@@ -5,6 +5,7 @@ import {
   IoSettingsOutline,
   IoLogOutOutline,
 } from 'react-icons/io5';
+import { FaPen } from 'react-icons/fa';
 import { useAuth } from '@/hooks/useAuth';
 
 interface DropdownProps {
@@ -98,8 +99,18 @@ export default function Dropdown({ userName, userImage }: DropdownProps) {
                 <IoPersonOutline className='w-3 h-3 sm:w-4 sm:h-4 text-white' />
               </div>
               <span className='text-[13px] sm:text-[15px]'>
-                Bảng điều khiển
+                Thông tin tài khoản
               </span>
+            </Link>
+            <Link
+              to='/candidate/update-profile'
+              onClick={() => setIsOpen(false)}
+              className='w-full px-3 sm:px-4 py-2 sm:py-2.5 text-left hover:bg-gray-50 flex items-center gap-2 sm:gap-3'
+            >
+              <div className='w-5 h-5 sm:w-6 sm:h-6 rounded bg-secondary flex items-center justify-center'>
+                <FaPen className='w-3 h-3 sm:w-4 sm:h-4 text-white' />
+              </div>
+              <span className='text-[13px] sm:text-[15px]'>Cập nhật hồ sơ</span>
             </Link>
             <Link
               to='/candidate/change-password'

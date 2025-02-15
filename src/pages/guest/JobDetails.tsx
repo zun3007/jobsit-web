@@ -238,7 +238,7 @@ export default function JobDetails() {
                     className='w-[92px] h-[92px] border border-[#DEDEDE] rounded-lg overflow-hidden flex-shrink-0'
                   >
                     <img
-                      src={job.companyDTO.logo || '/company-placeholder.png'}
+                      src={job.companyDTO.logo || '/company_logo_temp.svg'}
                       alt={job.companyDTO.name}
                       className='w-full h-full object-contain p-2'
                     />
@@ -543,9 +543,7 @@ export default function JobDetails() {
                       {/* Company Image */}
                       <div className='p-6 border-b border-[#DEDEDE]'>
                         <img
-                          src={
-                            job.companyDTO.logo || '/company-placeholder.png'
-                          }
+                          src={job.companyDTO.logo || '/company_logo_temp.svg'}
                           alt={job.companyDTO.name}
                           className='w-full aspect-square object-contain'
                         />
@@ -625,7 +623,7 @@ export default function JobDetails() {
                                 <img
                                   src={
                                     job.companyDTO.logo ||
-                                    '/company-placeholder.png'
+                                    '/company_logo_temp.svg'
                                   }
                                   alt={job.companyDTO.name}
                                   className='w-full h-full object-contain'

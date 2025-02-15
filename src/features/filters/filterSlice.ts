@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface JobFilters {
-  schedule?: string;
-  position?: string;
-  major?: string;
+  scheduleIds?: number[];
+  positionIds?: number[];
+  majorIds?: number[];
   name?: string;
   provinceName?: string;
   no: number;
@@ -22,7 +22,7 @@ interface FilterState {
   jobs: JobFilters;
   universities: UniversityFilters;
   savedFilters: {
-    [key: string]: any;
+    [key: string]: JobFilters | UniversityFilters;
   };
 }
 
@@ -57,7 +57,13 @@ const filterSlice = createSlice({
     resetUniversityFilters: (state) => {
       state.universities = initialState.universities;
     },
-    saveFilter: (state, action: PayloadAction<{ key: string; value: any }>) => {
+    saveFilter: (
+      state,
+      action: PayloadAction<{
+        key: string;
+        value: JobFilters | UniversityFilters;
+      }>
+    ) => {
       state.savedFilters[action.payload.key] = action.payload.value;
     },
     clearSavedFilter: (state, action: PayloadAction<string>) => {

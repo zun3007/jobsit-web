@@ -23,7 +23,6 @@ export default function GuestHome() {
   const dispatch = useAppDispatch();
   const { jobs, isLoading, totalJobs } = useJobs();
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
-  const { savedJobs } = useAppSelector((state) => state.jobs);
   const filters = useAppSelector((state) => state.filters.jobs);
   const { saveJob, unsaveJob, isSaving } = useSaveJob();
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -41,9 +40,9 @@ export default function GuestHome() {
   const [majorCollapsed, setMajorCollapsed] = useState(false);
 
   // Filter states
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
-  const [selectedMajors, setSelectedMajors] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<number[]>([]);
+  const [selectedPositions, setSelectedPositions] = useState<number[]>([]);
+  const [selectedMajors, setSelectedMajors] = useState<number[]>([]);
 
   // Calculate total pages
   const totalPages = Math.ceil(totalJobs / (filters.limit || 10));
@@ -83,13 +82,10 @@ export default function GuestHome() {
       setFilters({
         name: searchTerm || undefined,
         provinceName: location || undefined,
-        schedule:
-          selectedTypes.length > 0 ? selectedTypes.join(',') : undefined,
-        position:
-          selectedPositions.length > 0
-            ? selectedPositions.join(',')
-            : undefined,
-        major: selectedMajors.length > 0 ? selectedMajors.join(',') : undefined,
+        scheduleIds: selectedTypes.length > 0 ? selectedTypes : undefined,
+        positionIds:
+          selectedPositions.length > 0 ? selectedPositions : undefined,
+        majorIds: selectedMajors.length > 0 ? selectedMajors : undefined,
         no: 0, // Reset to first page when searching
         limit: filters.limit, // Preserve the existing limit
       })
@@ -113,14 +109,10 @@ export default function GuestHome() {
         setFilters({
           name: urlSearchTerm || undefined,
           provinceName: urlLocation || undefined,
-          schedule:
-            selectedTypes.length > 0 ? selectedTypes.join(',') : undefined,
-          position:
-            selectedPositions.length > 0
-              ? selectedPositions.join(',')
-              : undefined,
-          major:
-            selectedMajors.length > 0 ? selectedMajors.join(',') : undefined,
+          scheduleIds: selectedTypes.length > 0 ? selectedTypes : undefined,
+          positionIds:
+            selectedPositions.length > 0 ? selectedPositions : undefined,
+          majorIds: selectedMajors.length > 0 ? selectedMajors : undefined,
         })
       );
     }
@@ -186,13 +178,13 @@ export default function GuestHome() {
                     <input
                       type='checkbox'
                       className='w-5 h-5 appearance-none rounded-md border border-[#00B074] accent-[#00B074] checked:text-white focus:ring-[#00B074] checked:bg-[#00B074] checked:before:content-["✔"] checked:before:text-white checked:before:flex checked:before:items-center checked:before:justify-center checked:before:text-sm checked:before:font-bold checked:before:scale-x-125'
-                      checked={selectedTypes.includes('Full time')}
+                      checked={selectedTypes.includes(1)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedTypes([...selectedTypes, 'Full time']);
+                          setSelectedTypes([...selectedTypes, 1]);
                         } else {
                           setSelectedTypes(
-                            selectedTypes.filter((type) => type !== 'Full time')
+                            selectedTypes.filter((id) => id !== 1)
                           );
                         }
                       }}
@@ -203,13 +195,13 @@ export default function GuestHome() {
                     <input
                       type='checkbox'
                       className='w-5 h-5 appearance-none rounded-md border border-[#00B074] accent-[#00B074] checked:text-white focus:ring-[#00B074] checked:bg-[#00B074] checked:before:content-["✔"] checked:before:text-white checked:before:flex checked:before:items-center checked:before:justify-center checked:before:text-sm checked:before:font-bold checked:before:scale-x-125'
-                      checked={selectedTypes.includes('Part time')}
+                      checked={selectedTypes.includes(2)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedTypes([...selectedTypes, 'Part time']);
+                          setSelectedTypes([...selectedTypes, 2]);
                         } else {
                           setSelectedTypes(
-                            selectedTypes.filter((type) => type !== 'Part time')
+                            selectedTypes.filter((id) => id !== 2)
                           );
                         }
                       }}
@@ -220,13 +212,13 @@ export default function GuestHome() {
                     <input
                       type='checkbox'
                       className='w-5 h-5 appearance-none rounded-md border border-[#00B074] accent-[#00B074] checked:text-white focus:ring-[#00B074] checked:bg-[#00B074] checked:before:content-["✔"] checked:before:text-white checked:before:flex checked:before:items-center checked:before:justify-center checked:before:text-sm checked:before:font-bold checked:before:scale-x-125'
-                      checked={selectedTypes.includes('Remote')}
+                      checked={selectedTypes.includes(3)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedTypes([...selectedTypes, 'Remote']);
+                          setSelectedTypes([...selectedTypes, 3]);
                         } else {
                           setSelectedTypes(
-                            selectedTypes.filter((type) => type !== 'Remote')
+                            selectedTypes.filter((id) => id !== 3)
                           );
                         }
                       }}
@@ -258,18 +250,13 @@ export default function GuestHome() {
                     <input
                       type='checkbox'
                       className='w-5 h-5 appearance-none rounded-md border border-[#00B074] accent-[#00B074] checked:text-white focus:ring-[#00B074] checked:bg-[#00B074] checked:before:content-["✔"] checked:before:text-white checked:before:flex checked:before:items-center checked:before:justify-center checked:before:text-sm checked:before:font-bold checked:before:scale-x-125'
-                      checked={selectedPositions.includes('Front end')}
+                      checked={selectedPositions.includes(1)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedPositions([
-                            ...selectedPositions,
-                            'Front end',
-                          ]);
+                          setSelectedPositions([...selectedPositions, 1]);
                         } else {
                           setSelectedPositions(
-                            selectedPositions.filter(
-                              (pos) => pos !== 'Front end'
-                            )
+                            selectedPositions.filter((id) => id !== 1)
                           );
                         }
                       }}
@@ -280,18 +267,13 @@ export default function GuestHome() {
                     <input
                       type='checkbox'
                       className='w-5 h-5 appearance-none rounded-md border border-[#00B074] accent-[#00B074] checked:text-white focus:ring-[#00B074] checked:bg-[#00B074] checked:before:content-["✔"] checked:before:text-white checked:before:flex checked:before:items-center checked:before:justify-center checked:before:text-sm checked:before:font-bold checked:before:scale-x-125'
-                      checked={selectedPositions.includes('Back end')}
+                      checked={selectedPositions.includes(2)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedPositions([
-                            ...selectedPositions,
-                            'Back end',
-                          ]);
+                          setSelectedPositions([...selectedPositions, 2]);
                         } else {
                           setSelectedPositions(
-                            selectedPositions.filter(
-                              (pos) => pos !== 'Back end'
-                            )
+                            selectedPositions.filter((id) => id !== 2)
                           );
                         }
                       }}
@@ -302,43 +284,35 @@ export default function GuestHome() {
                     <input
                       type='checkbox'
                       className='w-5 h-5 appearance-none rounded-md border border-[#00B074] accent-[#00B074] checked:text-white focus:ring-[#00B074] checked:bg-[#00B074] checked:before:content-["✔"] checked:before:text-white checked:before:flex checked:before:items-center checked:before:justify-center checked:before:text-sm checked:before:font-bold checked:before:scale-x-125'
-                      checked={selectedPositions.includes('Fullstack')}
+                      checked={selectedPositions.includes(3)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedPositions([
-                            ...selectedPositions,
-                            'Fullstack',
-                          ]);
+                          setSelectedPositions([...selectedPositions, 3]);
                         } else {
                           setSelectedPositions(
-                            selectedPositions.filter(
-                              (pos) => pos !== 'Fullstack'
-                            )
+                            selectedPositions.filter((id) => id !== 3)
                           );
                         }
                       }}
                     />
-                    <span>Fullstack</span>
+                    <span>Full Stack</span>
                   </label>
                   <label className='flex items-center gap-2'>
                     <input
                       type='checkbox'
                       className='w-5 h-5 appearance-none rounded-md border border-[#00B074] accent-[#00B074] checked:text-white focus:ring-[#00B074] checked:bg-[#00B074] checked:before:content-["✔"] checked:before:text-white checked:before:flex checked:before:items-center checked:before:justify-center checked:before:text-sm checked:before:font-bold checked:before:scale-x-125'
-                      checked={selectedPositions.includes('Mobile')}
+                      checked={selectedPositions.includes(7)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedPositions([
-                            ...selectedPositions,
-                            'Mobile',
-                          ]);
+                          setSelectedPositions([...selectedPositions, 7]);
                         } else {
                           setSelectedPositions(
-                            selectedPositions.filter((pos) => pos !== 'Mobile')
+                            selectedPositions.filter((id) => id !== 7)
                           );
                         }
                       }}
                     />
-                    <span>Mobile</span>
+                    <span>DevOps</span>
                   </label>
                 </div>
               )}
@@ -363,67 +337,86 @@ export default function GuestHome() {
                     <input
                       type='checkbox'
                       className='w-5 h-5 appearance-none rounded-md border border-[#00B074] accent-[#00B074] checked:text-white focus:ring-[#00B074] checked:bg-[#00B074] checked:before:content-["✔"] checked:before:text-white checked:before:flex checked:before:items-center checked:before:justify-center checked:before:text-sm checked:before:font-bold checked:before:scale-x-125'
-                      checked={selectedMajors.includes('Công nghệ thông tin')}
+                      checked={selectedMajors.includes(1)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedMajors([
-                            ...selectedMajors,
-                            'Công nghệ thông tin',
-                          ]);
+                          setSelectedMajors([...selectedMajors, 1]);
                         } else {
                           setSelectedMajors(
-                            selectedMajors.filter(
-                              (major) => major !== 'Công nghệ thông tin'
-                            )
+                            selectedMajors.filter((id) => id !== 1)
                           );
                         }
                       }}
                     />
-                    <span>Công nghệ thông tin</span>
+                    <span>Khoa học máy tính</span>
                   </label>
                   <label className='flex items-center gap-2'>
                     <input
                       type='checkbox'
                       className='w-5 h-5 appearance-none rounded-md border border-[#00B074] accent-[#00B074] checked:text-white focus:ring-[#00B074] checked:bg-[#00B074] checked:before:content-["✔"] checked:before:text-white checked:before:flex checked:before:items-center checked:before:justify-center checked:before:text-sm checked:before:font-bold checked:before:scale-x-125'
-                      checked={selectedMajors.includes('Kỹ thuật phần mềm')}
+                      checked={selectedMajors.includes(2)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedMajors([
-                            ...selectedMajors,
-                            'Kỹ thuật phần mềm',
-                          ]);
+                          setSelectedMajors([...selectedMajors, 2]);
                         } else {
                           setSelectedMajors(
-                            selectedMajors.filter(
-                              (major) => major !== 'Kỹ thuật phần mềm'
-                            )
+                            selectedMajors.filter((id) => id !== 2)
                           );
                         }
                       }}
                     />
-                    <span>Kỹ thuật phần mềm</span>
+                    <span>Công nghệ phần mềm</span>
                   </label>
                   <label className='flex items-center gap-2'>
                     <input
                       type='checkbox'
                       className='w-5 h-5 appearance-none rounded-md border border-[#00B074] accent-[#00B074] checked:text-white focus:ring-[#00B074] checked:bg-[#00B074] checked:before:content-["✔"] checked:before:text-white checked:before:flex checked:before:items-center checked:before:justify-center checked:before:text-sm checked:before:font-bold checked:before:scale-x-125'
-                      checked={selectedMajors.includes('Kỹ thuật máy tính')}
+                      checked={selectedMajors.includes(3)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedMajors([
-                            ...selectedMajors,
-                            'Kỹ thuật máy tính',
-                          ]);
+                          setSelectedMajors([...selectedMajors, 3]);
                         } else {
                           setSelectedMajors(
-                            selectedMajors.filter(
-                              (major) => major !== 'Kỹ thuật máy tính'
-                            )
+                            selectedMajors.filter((id) => id !== 3)
                           );
                         }
                       }}
                     />
                     <span>Kỹ thuật máy tính</span>
+                  </label>
+                  <label className='flex items-center gap-2'>
+                    <input
+                      type='checkbox'
+                      className='w-5 h-5 appearance-none rounded-md border border-[#00B074] accent-[#00B074] checked:text-white focus:ring-[#00B074] checked:bg-[#00B074] checked:before:content-["✔"] checked:before:text-white checked:before:flex checked:before:items-center checked:before:justify-center checked:before:text-sm checked:before:font-bold checked:before:scale-x-125'
+                      checked={selectedMajors.includes(4)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedMajors([...selectedMajors, 4]);
+                        } else {
+                          setSelectedMajors(
+                            selectedMajors.filter((id) => id !== 4)
+                          );
+                        }
+                      }}
+                    />
+                    <span>Trí tuệ nhân tạo</span>
+                  </label>
+                  <label className='flex items-center gap-2'>
+                    <input
+                      type='checkbox'
+                      className='w-5 h-5 appearance-none rounded-md border border-[#00B074] accent-[#00B074] checked:text-white focus:ring-[#00B074] checked:bg-[#00B074] checked:before:content-["✔"] checked:before:text-white checked:before:flex checked:before:items-center checked:before:justify-center checked:before:text-sm checked:before:font-bold checked:before:scale-x-125'
+                      checked={selectedMajors.includes(6)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedMajors([...selectedMajors, 6]);
+                        } else {
+                          setSelectedMajors(
+                            selectedMajors.filter((id) => id !== 6)
+                          );
+                        }
+                      }}
+                    />
+                    <span>Hệ thống quản lý thông tin</span>
                   </label>
                 </div>
               )}
@@ -545,7 +538,7 @@ export default function GuestHome() {
                       className='w-[100px] h-[100px] border rounded-lg overflow-hidden flex-shrink-0'
                     >
                       <img
-                        src={job.companyDTO.logo || '/company-placeholder.png'}
+                        src={job.companyDTO.logo || '/company_logo_temp.svg'}
                         alt={job.companyDTO.name}
                         className='w-full h-full object-contain p-2'
                       />
@@ -567,16 +560,24 @@ export default function GuestHome() {
                         <span className='text-sm text-gray-500'>
                           {job.location}
                         </span>
-                        {/* <span className='text-sm text-gray-500'>•</span> */}
+                        <span className='text-sm text-gray-500'>•</span>
                         <span className='text-sm text-gray-500'>
                           {job.scheduleDTOs.map((s) => s.name).join(', ')}
                         </span>
                       </div>
                       <div className='flex flex-wrap gap-2 mt-2'>
+                        {job.positionDTOs.map((position) => (
+                          <span
+                            key={position.id}
+                            className='px-3 py-1 text-xs bg-white text-gray-600 border border-gray-200 rounded'
+                          >
+                            {position.name}
+                          </span>
+                        ))}
                         {job.majorDTOs.map((major) => (
                           <span
                             key={major.id}
-                            className='px-3 py-1 text-xs bg-[#E6F6F1] text-[#00B074] rounded'
+                            className='px-3 py-1 text-xs bg-white text-gray-600 border border-gray-200 rounded'
                           >
                             {major.name}
                           </span>
