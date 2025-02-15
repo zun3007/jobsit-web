@@ -4,6 +4,8 @@ import Switch from '@/components/ui/Switch';
 import { useCandidates } from '@/hooks/useCandidates';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { vietnameseProvinces, getDistricts } from '@/utils/constants';
+import ToastContainer from '@/components/ui/ToastContainer';
+import { useToast } from '@/hooks/useToast';
 
 interface PositionDTO {
   id: number;
@@ -41,6 +43,7 @@ interface UpdateProfileForm {
 }
 
 export default function UpdateProfile() {
+  const { toasts, showSuccess, showError, removeToast } = useToast();
   const {
     profile,
     isLoadingApplications,
@@ -79,6 +82,7 @@ export default function UpdateProfile() {
   const { register, handleSubmit, setValue, reset, control, watch } =
     useForm<UpdateProfileForm>({
       defaultValues: {
+        district: profile?.userDTO?.location?.split(',')[1]?.trim() || '',
         positionDTOs: [],
         majorDTOs: [],
         scheduleDTOs: [],
@@ -102,9 +106,34 @@ export default function UpdateProfile() {
       const provinceDistricts = getDistricts(selectedProvince);
       setDistricts(provinceDistricts);
       // Reset district when province changes
-      setValue('district', '');
+      // setValue('district', '');
     }
   }, [selectedProvince, setValue]);
+
+  // Add this useEffect after the existing useEffect for province changes
+  // useEffect(() => {
+  //   if (profile?.userDTO?.location) {
+  //     const locationParts = profile.userDTO.location.split(',');
+  //     const district = locationParts[1]?.trim() || '';
+  //     const province = locationParts[2]?.trim() || '';
+
+  //     if (province) {
+  //       setValue('province', province);
+  //       const provinceDistricts = getDistricts(province);
+  //       setDistricts(provinceDistricts);
+  //       setValue('district', district);
+  //     }
+  //   }
+  // }, [profile, setValue]);
+
+  useEffect(() => {
+    if (profile?.userDTO?.location) {
+      setValue(
+        'district',
+        profile.userDTO.location.split(',')[1]?.trim() || ''
+      );
+    }
+  }, [profile?.userDTO?.location, setValue]);
 
   // Format date from DD-MM-YYYY to YYYY-MM-DD for input type="date"
   const formatDate = (dateStr: string | null) => {
@@ -330,8 +359,9 @@ export default function UpdateProfile() {
       }
 
       await updateProfile(formData);
+      showSuccess('Cập nhật thông tin thành công');
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      showError(error?.message);
     }
   };
 
@@ -561,7 +591,7 @@ export default function UpdateProfile() {
                             : 'Vui lòng chọn tỉnh/thành phố trước'}
                         </option>
                         {districts.map((district) => (
-                          <option key={district} value={district}>
+                          <option key={district} value={district.trim()}>
                             {district}
                           </option>
                         ))}
@@ -1068,6 +1098,7 @@ export default function UpdateProfile() {
           </div>
         </div>
       </div>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }
