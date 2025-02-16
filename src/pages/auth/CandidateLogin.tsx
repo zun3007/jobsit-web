@@ -5,7 +5,6 @@ import { useToast } from '@/hooks/useToast';
 import { FcGoogle } from 'react-icons/fc';
 import { FaFacebook } from 'react-icons/fa';
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
-import { AxiosError } from 'axios';
 import ToastContainer from '@/components/ui/ToastContainer';
 import Spinner from '@/components/ui/Spinner';
 import { useForm } from 'react-hook-form';
@@ -22,7 +21,7 @@ type FormData = z.infer<typeof schema>;
 export default function CandidateLogin() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { toasts, showError, showSuccess, removeToast } = useToast();
+  const { toasts, showError, showSuccess, removeToast, showInfo } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -200,6 +199,7 @@ export default function CandidateLogin() {
         <div className='space-y-3'>
           <button
             type='button'
+            onClick={() => showInfo('Tính năng đang được cập nhật!')}
             className='w-full flex items-center justify-center gap-2 bg-[#EA4335] text-white rounded-lg py-3 font-medium hover:bg-[#EA4335]/90 transition-colors'
           >
             <FcGoogle className='w-6 h-6 bg-white rounded p-1' />
@@ -207,6 +207,7 @@ export default function CandidateLogin() {
           </button>
           <button
             type='button'
+            onClick={() => showInfo('Tính năng đang được cập nhật!')}
             className='w-full flex items-center justify-center gap-2 bg-[#4267B2] text-white rounded-lg py-3 font-medium hover:bg-[#4267B2]/90 transition-colors'
           >
             <FaFacebook className='w-6 h-6' />

@@ -38,7 +38,7 @@ export default function CandidateRegister() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { toasts, showSuccess, showError, removeToast } = useToast();
+  const { toasts, showSuccess, showError, removeToast, showInfo } = useToast();
   const navigate = useNavigate();
 
   const {
@@ -110,11 +110,17 @@ export default function CandidateRegister() {
 
             {/* Social Login Buttons */}
             <div className='flex flex-row gap-3 mb-8'>
-              <button className='w-full flex items-center justify-center gap-3 px-4 py-3 text-sm font-medium rounded-[4px] text-white bg-[#DB4437] hover:bg-[#c13b2f] focus:outline-none'>
+              <button
+                onClick={() => showInfo('Tính năng đang được cập nhật!')}
+                className='w-full flex items-center justify-center gap-3 px-4 py-3 text-sm font-medium rounded-[4px] text-white bg-[#DB4437] hover:bg-[#c13b2f] focus:outline-none'
+              >
                 <FaGoogle className='w-5 h-5' />
                 <span className='font-bold'>TIẾP TỤC VỚI GOOGLE</span>
               </button>
-              <button className='w-full flex items-center justify-center gap-3 px-4 py-3 text-sm font-medium rounded-[4px] text-white bg-[#4267B2] hover:bg-[#375593] focus:outline-none'>
+              <button
+                onClick={() => showInfo('Tính năng đang được cập nhật!')}
+                className='w-full flex items-center justify-center gap-3 px-4 py-3 text-sm font-medium rounded-[4px] text-white bg-[#4267B2] hover:bg-[#375593] focus:outline-none'
+              >
                 <FaFacebook className='w-5 h-5' />
                 <span className='font-bold'>TIẾP TỤC VỚI FACEBOOK</span>
               </button>
