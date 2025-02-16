@@ -86,8 +86,6 @@ export const useGeolocation = () => {
     isLoading: true,
   });
 
-  console.log(location);
-
   const findProvince = (address: string): VietnameseProvince | null => {
     // First try direct match
     for (const province of vietnameseProvinces) {
