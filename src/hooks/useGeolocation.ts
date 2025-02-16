@@ -20,22 +20,6 @@ interface GeolocationPosition {
   };
 }
 
-interface AddressComponent {
-  long_name: string;
-  short_name: string;
-  types: string[];
-}
-
-interface GeocodeResult {
-  address_components: AddressComponent[];
-  formatted_address: string;
-}
-
-interface GeocodeResponse {
-  results: GeocodeResult[];
-  status: string;
-}
-
 // Special case mappings for provinces
 const provinceMapping: Record<string, VietnameseProvince> = {
   'Thành phố Hồ Chí Minh': 'TP Hồ Chí Minh',
@@ -102,39 +86,28 @@ export const useGeolocation = () => {
     isLoading: true,
   });
 
-  const findProvince = (
-    components: AddressComponent[]
-  ): VietnameseProvince | null => {
-    for (const component of components) {
-      const longName = component.long_name;
+  console.log(location);
 
-      // Check direct match
-      if (vietnameseProvinces.includes(longName as VietnameseProvince)) {
-        return longName as VietnameseProvince;
-      }
-
-      // Check special cases
-      const mappedProvince = provinceMapping[longName];
-      if (mappedProvince) {
-        return mappedProvince;
-      }
-
-      // Check if it's a province type
-      if (component.types.includes('administrative_area_level_1')) {
-        // Try to find a match in our mapping
-        const foundProvince = Object.entries(provinceMapping).find(
-          ([key]) => key.toLowerCase() === longName.toLowerCase()
-        );
-        if (foundProvince) {
-          return foundProvince[1];
-        }
+  const findProvince = (address: string): VietnameseProvince | null => {
+    // First try direct match
+    for (const province of vietnameseProvinces) {
+      if (address.includes(province)) {
+        return province;
       }
     }
+
+    // Try mapped variations
+    for (const [key, value] of Object.entries(provinceMapping)) {
+      if (address.includes(key)) {
+        return value;
+      }
+    }
+
     return null;
   };
 
   const findDistrict = (
-    components: AddressComponent[],
+    address: string,
     province: VietnameseProvince | null
   ): string | null => {
     if (!province) return null;
@@ -142,59 +115,54 @@ export const useGeolocation = () => {
     const districts = vietnameseDistricts[province];
     const districtMapping = getDistrictMapping(province);
 
-    for (const component of components) {
-      const longName = component.long_name;
-
-      // Check direct match
-      if (districts.includes(longName)) {
-        return longName;
-      }
-
-      // Check mapped variations
-      const mappedDistrict = districtMapping[longName];
-      if (mappedDistrict) {
-        return mappedDistrict;
-      }
-
-      // Check if it's a district type
-      if (component.types.includes('administrative_area_level_2')) {
-        // Try to find a match in our mapping
-        const foundDistrict = Object.entries(districtMapping).find(
-          ([key]) => key.toLowerCase() === longName.toLowerCase()
-        );
-        if (foundDistrict) {
-          return foundDistrict[1];
-        }
+    // First try direct match
+    for (const district of districts) {
+      if (address.includes(district)) {
+        return district;
       }
     }
+
+    // Try mapped variations
+    for (const [key, value] of Object.entries(districtMapping)) {
+      if (address.includes(key)) {
+        return value;
+      }
+    }
+
     return null;
   };
 
   const getAddressFromCoords = async (latitude: number, longitude: number) => {
     try {
-      const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      // Use OpenStreetMap's Nominatim service with proper headers
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}&language=vi`
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=vi`,
+        {
+          headers: {
+            'User-Agent': 'JobsIT/1.0',
+            'Accept-Language': 'vi',
+          },
+        }
       );
-      const data: GeocodeResponse = await response.json();
 
-      if (data.status === 'OK' && data.results.length > 0) {
-        const addressComponents = data.results[0].address_components;
-        const formattedAddress = data.results[0].formatted_address;
-
-        const province = findProvince(addressComponents);
-        const district = findDistrict(addressComponents, province);
-
-        setLocation({
-          address: formattedAddress,
-          district,
-          province,
-          error: null,
-          isLoading: false,
-        });
-      } else {
+      if (!response.ok) {
         throw new Error('Không thể xác định địa chỉ');
       }
+
+      const data = await response.json();
+
+      // Extract address components
+      const address = data.display_name;
+      const province = findProvince(address);
+      const district = findDistrict(address, province);
+
+      setLocation({
+        address,
+        district,
+        province,
+        error: null,
+        isLoading: false,
+      });
     } catch {
       setLocation((prev) => ({
         ...prev,

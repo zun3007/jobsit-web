@@ -10,7 +10,7 @@ export default function ProtectedRoute({ roles }: ProtectedRouteProps) {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
 
   if (!isAuthenticated) {
-    return <Navigate to='/auth/login' replace />;
+    return <Navigate to='/auth/candidate' replace />;
   }
 
   if (roles && (!user?.role || !roles.includes(user.role as Roles))) {

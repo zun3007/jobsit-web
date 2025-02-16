@@ -6,6 +6,8 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { vietnameseProvinces, getDistricts } from '@/utils/constants';
 import ToastContainer from '@/components/ui/ToastContainer';
 import { useToast } from '@/hooks/useToast';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { AxiosError } from 'axios';
 
 interface PositionDTO {
   id: number;
@@ -50,6 +52,7 @@ export default function UpdateProfile() {
     isLoadingRecommendedJobs,
     updateProfile,
   } = useCandidates();
+  const { province, district, isLoading: isLoadingLocation } = useGeolocation();
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>('');
   const [cvFile, setCvFile] = useState<File | null>(null);
@@ -105,38 +108,30 @@ export default function UpdateProfile() {
     if (selectedProvince) {
       const provinceDistricts = getDistricts(selectedProvince);
       setDistricts(provinceDistricts);
-      // Reset district when province changes
-      // setValue('district', '');
     }
   }, [selectedProvince, setValue]);
 
-  // Add this useEffect after the existing useEffect for province changes
-  // useEffect(() => {
-  //   if (profile?.userDTO?.location) {
-  //     const locationParts = profile.userDTO.location.split(',');
-  //     const district = locationParts[1]?.trim() || '';
-  //     const province = locationParts[2]?.trim() || '';
-
-  //     if (province) {
-  //       setValue('province', province);
-  //       const provinceDistricts = getDistricts(province);
-  //       setDistricts(provinceDistricts);
-  //       setValue('district', district);
-  //     }
-  //   }
-  // }, [profile, setValue]);
-
+  // Auto-fill location if user doesn't have it
   useEffect(() => {
-    if (profile?.userDTO?.location) {
-      setValue(
-        'district',
-        profile.userDTO.location.split(',')[1]?.trim() || ''
-      );
+    console.log(province, district);
+    if (!isLoadingLocation && province && district) {
+      const userLocation = profile?.userDTO?.location;
+      const hasLocation = userLocation && userLocation.includes(',');
+
+      if (!hasLocation) {
+        setValue('province', province);
+        setValue('district', district);
+        const provinceDistricts = getDistricts(province);
+        setDistricts(provinceDistricts);
+      }
     }
-  }, [profile?.userDTO?.location, setValue]);
+  }, [isLoadingLocation, province, district, profile, setValue]);
 
   useEffect(() => {
     if (profile) {
+      const userLocation = profile.userDTO.location;
+      const locationParts = userLocation?.split(',').map((part) => part.trim());
+
       reset({
         lastName: profile.userDTO.lastName || '',
         firstName: profile.userDTO.firstName || '',
@@ -146,15 +141,9 @@ export default function UpdateProfile() {
           : '',
         phone: profile.userDTO.phone || '',
         gender: profile.userDTO.gender ? '1' : '0',
-        province: profile.userDTO.location
-          ? profile.userDTO.location.split(',')[2]?.trim()
-          : '',
-        district: profile.userDTO.location
-          ? profile.userDTO.location.split(',')[1]?.trim()
-          : '',
-        address: profile.userDTO.location
-          ? profile.userDTO.location.split(',')[0]?.trim()
-          : '',
+        province: locationParts?.[2] || '',
+        district: locationParts?.[1] || '',
+        address: locationParts?.[0] || '',
         university: profile.candidateOtherInfoDTO?.universityDTO?.name || '',
         desiredJob: profile.candidateOtherInfoDTO?.desiredJob || '',
         desiredWorkingProvince:
@@ -168,6 +157,12 @@ export default function UpdateProfile() {
       // Set avatar preview if exists
       if (profile.userDTO.avatar) {
         setAvatarPreview(profile.userDTO.avatar);
+      }
+
+      // If location exists, set districts
+      if (locationParts?.[2]) {
+        const provinceDistricts = getDistricts(locationParts[2]);
+        setDistricts(provinceDistricts);
       }
     }
   }, [profile, reset]);
@@ -361,7 +356,16 @@ export default function UpdateProfile() {
       await updateProfile(formData);
       showSuccess('Cập nhật thông tin thành công');
     } catch (error) {
-      showError(error?.message);
+      if (error instanceof AxiosError) {
+        showError(
+          error.response?.data?.message ||
+            'Đã xảy ra lỗi khi cập nhật thông tin'
+        );
+      } else if (error instanceof Error) {
+        showError(error.message);
+      } else {
+        showError('Đã xảy ra lỗi khi cập nhật thông tin');
+      }
     }
   };
 
