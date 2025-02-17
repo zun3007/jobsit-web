@@ -95,6 +95,20 @@ export function useCandidates() {
     },
   });
 
+  // Update email notification status mutation
+  const updateReceiveEmailNotificationMutation = useMutation({
+    mutationFn: () =>
+      user?.id
+        ? candidateService.updateReceiveEmailNotification(user.id)
+        : Promise.reject('No user ID'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.candidates.root });
+    },
+    onError: (error) => {
+      dispatch(setError(extractErrorMessage(error)));
+    },
+  });
+
   return {
     profile,
     applications: applications?.contents || [],
@@ -113,5 +127,9 @@ export function useCandidates() {
     isWithdrawing: withdrawApplicationMutation.isPending,
     updateSearchableStatus: updateSearchableStatusMutation.mutateAsync,
     isUpdatingSearchableStatus: updateSearchableStatusMutation.isPending,
+    updateReceiveEmailNotification:
+      updateReceiveEmailNotificationMutation.mutateAsync,
+    isUpdatingReceiveEmailNotification:
+      updateReceiveEmailNotificationMutation.isPending,
   };
 }

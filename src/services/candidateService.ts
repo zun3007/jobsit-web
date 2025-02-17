@@ -26,7 +26,7 @@ interface UserDTO {
   phone: string | null;
   avatar: string | null;
   location: string | null;
-  mailReceive: boolean;
+  receiveEmailNotification: boolean;
   roleDTO: RoleDTO;
   statusDTO: StatusDTO;
 }
@@ -200,6 +200,14 @@ export const candidateService = {
   async updateSearchableStatus(userId: number): Promise<void> {
     try {
       await axiosInstance.put(`/candidate/searchable/${userId}`);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+
+  async updateReceiveEmailNotification(userId: number): Promise<void> {
+    try {
+      await axiosInstance.put(`/candidate/email-notification/${userId}`);
     } catch (error) {
       return handleApiError(error);
     }

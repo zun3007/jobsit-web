@@ -3,56 +3,31 @@ import Switch from '@/components/ui/Switch';
 import { useCandidates } from '@/hooks/useCandidates';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Link } from 'react-router-dom';
+import { fileService } from '@/services/fileService';
 
 export default function CandidateDashboard() {
   const {
     profile,
     isLoadingApplications,
     isLoadingRecommendedJobs,
-    updateProfile,
+    updateReceiveEmailNotification,
     updateSearchableStatus,
     isUpdatingSearchableStatus,
+    isUpdatingReceiveEmailNotification,
   } = useCandidates();
 
-  const handleMailReceiveChange = async (
+  console.log(profile);
+
+  const handleReceiveEmailNotificationChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    if (!profile?.userDTO) return;
-
-    const formData = new FormData();
-    const profileData = {
-      userProfileDTO: {
-        lastName: profile.userDTO.lastName,
-        firstName: profile.userDTO.firstName,
-        email: profile.userDTO.email,
-        gender: profile.userDTO.gender,
-        phone: profile.userDTO.phone,
-        birthDay: profile.userDTO.birthDay,
-        avatar: profile.userDTO.avatar,
-        location: profile.userDTO.location,
-        mailReceive: e.target.checked,
-      },
-      candidateOtherInfoDTO: {
-        universityDTO: profile.candidateOtherInfoDTO?.universityDTO || null,
-        cv: profile.candidateOtherInfoDTO?.cv || null,
-        referenceLetter: profile.candidateOtherInfoDTO?.referenceLetter || null,
-        positionDTOs: profile.candidateOtherInfoDTO?.positionDTOs || [],
-        majorDTOs: profile.candidateOtherInfoDTO?.majorDTOs || [],
-        scheduleDTOs: profile.candidateOtherInfoDTO?.scheduleDTOs || [],
-        desiredJob: profile.candidateOtherInfoDTO?.desiredJob || null,
-        desiredWorkingProvince:
-          profile.candidateOtherInfoDTO?.desiredWorkingProvince || null,
-        searchable: profile.candidateOtherInfoDTO?.searchable || false,
-      },
-    };
-
-    formData.append('candidateProfileDTO', JSON.stringify(profileData));
+    if (!profile?.userDTO?.id) return;
 
     try {
-      await updateProfile(formData);
+      await updateReceiveEmailNotification();
       // The profile should automatically refresh due to queryClient invalidation
     } catch (error) {
-      console.error('Failed to update mail receive status:', error);
+      console.error('Failed to update email notification status:', error);
       // Optionally revert the switch state on error
       e.target.checked = !e.target.checked;
     }
@@ -88,7 +63,9 @@ export default function CandidateDashboard() {
               <div className='my-16'>
                 <div className='relative max-w-44 max-h-44 mx-auto rounded-full border-2 border-[#00B074]'>
                   <img
-                    src={profile?.userDTO?.avatar || '/default-avatar.svg'}
+                    src={fileService.getFileDisplayUrl(
+                      profile?.userDTO?.avatar
+                    )}
                     alt={profile?.userDTO?.firstName}
                     className='w-full h-full rounded-full object-cover'
                   />
@@ -109,9 +86,7 @@ export default function CandidateDashboard() {
                       Cho phép nhà tuyển dụng tìm kiếm hồ sơ trực tuyến của bạn
                     </p>
                     <Switch
-                      checked={
-                        profile?.candidateOtherInfoDTO?.searchable || false
-                      }
+                      checked={profile?.candidateOtherInfoDTO?.searchable}
                       onChange={handleSearchableChange}
                       disabled={isUpdatingSearchableStatus}
                     />
@@ -128,8 +103,9 @@ export default function CandidateDashboard() {
                       Nhận thông báo về email
                     </p>
                     <Switch
-                      checked={profile?.userDTO?.mailReceive || false}
-                      onChange={handleMailReceiveChange}
+                      checked={profile?.userDTO?.receiveEmailNotification}
+                      onChange={handleReceiveEmailNotificationChange}
+                      disabled={isUpdatingReceiveEmailNotification}
                     />
                   </div>
                   <p className='text-sm text-gray-500 italic text-start'>
@@ -325,7 +301,9 @@ export default function CandidateDashboard() {
                     <div className='text-[#666] flex-1'>
                       {profile?.candidateOtherInfoDTO?.cv ? (
                         <a
-                          href={profile.candidateOtherInfoDTO.cv}
+                          href={fileService.getFileDisplayUrl(
+                            profile.candidateOtherInfoDTO.cv
+                          )}
                           target='_blank'
                           rel='noopener noreferrer'
                           className='flex items-center gap-2 text-[#00B074] hover:text-[#00B074]/80 transition-colors'
