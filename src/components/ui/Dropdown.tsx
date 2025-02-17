@@ -7,10 +7,11 @@ import {
 } from 'react-icons/io5';
 import { FaPen } from 'react-icons/fa';
 import { useAuth } from '@/hooks/useAuth';
+import { fileService } from '@/services/fileService';
 
 interface DropdownProps {
   userName: string;
-  userImage?: string;
+  userImage?: string | null;
 }
 
 export default function Dropdown({ userName, userImage }: DropdownProps) {
@@ -54,7 +55,7 @@ export default function Dropdown({ userName, userImage }: DropdownProps) {
         </span>
         {userImage ? (
           <img
-            src={userImage}
+            src={fileService.getFileDisplayUrl(userImage)}
             alt={userName}
             className='absolute right-[-1px] top-[-1px] w-[35px] h-[35px] sm:w-[40px] sm:h-[40px] rounded-full object-cover border border-[#C5C5C5]'
           />

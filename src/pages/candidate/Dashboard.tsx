@@ -61,7 +61,7 @@ export default function CandidateDashboard() {
             <div className='bg-white rounded-lg p-6 text-center border-2 border-[#00B074] shadow-[0_0_4px_rgba(0,0,0,0.1)]'>
               {/* Avatar Section */}
               <div className='my-16'>
-                <div className='relative max-w-44 max-h-44 mx-auto rounded-full border-2 border-[#00B074]'>
+                <div className='relative w-44 h-44 mx-auto rounded-full border-2 border-[#00B074]'>
                   <img
                     src={fileService.getFileDisplayUrl(
                       profile?.userDTO?.avatar
