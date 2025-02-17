@@ -191,6 +191,7 @@ export default function UpdateProfile() {
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      setAvatar(file);
       const localPreview = URL.createObjectURL(file);
       setAvatarPreview(fileService.getFileDisplayUrl(null, localPreview));
     }
@@ -378,13 +379,33 @@ export default function UpdateProfile() {
       // Append the profile data as JSON string
       formData.append('candidateProfileDTO', JSON.stringify(profileData));
 
-      // Append files if they exist
+      // Handle avatar file
       if (avatar) {
+        // If user selected a new avatar
         formData.append('fileAvatar', avatar);
+      } else if (profile?.userDTO?.avatar) {
+        // If user has an existing avatar but didn't select a new one
+        try {
+          const response = await fetch(
+            fileService.getFileDisplayUrl(profile.userDTO.avatar)
+          );
+          const blob = await response.blob();
+          const fileName =
+            profile.userDTO.avatar.split('/').pop() || 'avatar.jpg';
+          const file = new File([blob], fileName, { type: blob.type });
+          formData.append('fileAvatar', file);
+        } catch (error) {
+          console.error('Error fetching current avatar:', error);
+        }
       }
+
+      // Handle CV file
       if (cvFile) {
+        // If user selected a new CV
         formData.append('fileCV', cvFile);
       }
+
+      console.log(formData);
 
       await updateProfile(formData);
       showSuccess('Cập nhật thông tin thành công');

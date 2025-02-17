@@ -4,6 +4,8 @@ import { IoClose, IoCloudUpload } from 'react-icons/io5';
 import { applicationService } from '@/services/applicationService';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/react-query';
+import ToastContainer from '@/components/ui/ToastContainer';
+import { fileService } from '@/services/fileService';
 
 interface ApplicationModalProps {
   jobId: number;
@@ -23,7 +25,7 @@ export default function ApplicationModal({
     defaultReferenceLetter || ''
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, toasts, removeToast } = useToast();
   const queryClient = useQueryClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,9 +46,11 @@ export default function ApplicationModal({
         })
       );
 
+      // Only append CV if a new one is selected
       if (cvFile) {
         formData.append('fileCV', cvFile);
       }
+      // If no new CV is selected and defaultCV exists, the backend will use the existing CV
 
       await applicationService.applyForJob(formData);
       showSuccess('Nộp đơn ứng tuyển thành công!');
@@ -87,7 +91,7 @@ export default function ApplicationModal({
               <div className='flex items-center justify-between p-4 border border-gray-200 rounded-lg'>
                 <span className='text-sm text-gray-600'>CV hiện tại</span>
                 <a
-                  href={defaultCV}
+                  href={fileService.getFileDisplayUrl(defaultCV)}
                   target='_blank'
                   rel='noopener noreferrer'
                   className='text-[#00B074] hover:text-[#00915F]'
@@ -105,7 +109,7 @@ export default function ApplicationModal({
                       htmlFor='cv-upload'
                       className='relative cursor-pointer rounded-md bg-white font-medium text-[#00B074] focus-within:outline-none focus-within:ring-2 focus-within:ring-[#00B074] focus-within:ring-offset-2 hover:text-[#00915F]'
                     >
-                      <span>Tải lên CV</span>
+                      <span>Tải lên CV mới</span>
                       <input
                         id='cv-upload'
                         name='cv-upload'
@@ -126,9 +130,16 @@ export default function ApplicationModal({
                 </div>
               </div>
               {cvFile && (
-                <p className='mt-2 text-sm text-gray-600'>
-                  Đã chọn: {cvFile.name}
-                </p>
+                <div className='mt-2 flex items-center justify-between text-sm text-gray-600 bg-gray-50 p-2 rounded'>
+                  <span>{cvFile.name}</span>
+                  <button
+                    type='button'
+                    onClick={() => setCvFile(null)}
+                    className='text-red-500 hover:text-red-700'
+                  >
+                    Xóa
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -166,6 +177,7 @@ export default function ApplicationModal({
           </div>
         </form>
       </div>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }

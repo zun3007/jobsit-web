@@ -5,6 +5,7 @@ import { jobService } from '@/services/jobService';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import SaveButton from '@/components/ui/SaveButton';
 import RequireAuthModal from '@/components/auth/RequireAuthModal';
+import ToastContainer from '@/components/ui/ToastContainer';
 import {
   IoSearchOutline,
   IoLocationOutline,
@@ -34,7 +35,7 @@ export default function JobDetails() {
   const [searchLocation, setSearchLocation] = useState('');
   const { saveJob, unsaveJob, isSaving } = useSaveJob();
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
-  const { showError } = useToast();
+  const { showError, toasts, removeToast } = useToast();
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const { profile } = useCandidates();
 
@@ -786,6 +787,9 @@ export default function JobDetails() {
           }
         />
       )}
+
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }
