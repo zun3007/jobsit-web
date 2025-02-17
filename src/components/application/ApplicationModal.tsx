@@ -46,11 +46,27 @@ export default function ApplicationModal({
         })
       );
 
-      // Only append CV if a new one is selected
+      // Handle CV file
       if (cvFile) {
+        // If user selected a new CV, append it
         formData.append('fileCV', cvFile);
+      } else if (defaultCV) {
+        // If user has an existing CV but didn't select a new one
+        try {
+          const response = await fetch(
+            fileService.getFileDisplayUrl(defaultCV)
+          );
+          const blob = await response.blob();
+          const fileName = defaultCV.split('/').pop() || 'cv.pdf';
+          const file = new File([blob], fileName, { type: blob.type });
+          formData.append('fileCV', file);
+        } catch (error) {
+          console.error('Error fetching current CV:', error);
+          showError('Không thể tải CV hiện tại. Vui lòng thử lại.');
+          setIsSubmitting(false);
+          return;
+        }
       }
-      // If no new CV is selected and defaultCV exists, the backend will use the existing CV
 
       await applicationService.applyForJob(formData);
       showSuccess('Nộp đơn ứng tuyển thành công!');
