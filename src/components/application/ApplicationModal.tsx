@@ -54,7 +54,7 @@ export default function ApplicationModal({
 
       await applicationService.applyForJob(formData);
       showSuccess('Nộp đơn ứng tuyển thành công!');
-      queryClient.invalidateQueries({ queryKey: queryKeys.applications.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.applications.root });
       onClose();
     } catch (error: unknown) {
       if (error instanceof Error) {

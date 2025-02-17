@@ -11,6 +11,7 @@ import {
   IoDocumentTextOutline,
 } from 'react-icons/io5';
 import { FaRegClock } from 'react-icons/fa';
+import { queryKeys } from '@/lib/react-query';
 
 export default function Applications() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,7 +30,7 @@ export default function Applications() {
   };
 
   const { data: applications, isLoading } = useQuery({
-    queryKey: ['applications', currentPage - 1, itemsPerPage],
+    queryKey: queryKeys.applications.all(currentPage - 1, itemsPerPage),
     queryFn: () =>
       applicationService.getCandidateApplications(
         currentPage - 1,
