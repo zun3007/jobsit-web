@@ -129,13 +129,9 @@ export default function UpdateProfile() {
 
   // Auto-fill location if user doesn't have it
   useEffect(() => {
-    console.log('geoProvince', geoProvince);
-    console.log('geoDistrict', geoDistrict);
-
     if (!isLoadingLocation && geoProvince && geoDistrict) {
       const userLocation = profile?.userDTO?.location;
       const hasLocation = userLocation && userLocation.includes(',');
-      console.log('hasLocation', hasLocation);
 
       if (!hasLocation) {
         setValue('province', geoProvince);
