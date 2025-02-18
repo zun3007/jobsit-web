@@ -129,9 +129,13 @@ export default function UpdateProfile() {
 
   // Auto-fill location if user doesn't have it
   useEffect(() => {
+    console.log('geoProvince', geoProvince);
+    console.log('geoDistrict', geoDistrict);
+
     if (!isLoadingLocation && geoProvince && geoDistrict) {
       const userLocation = profile?.userDTO?.location;
       const hasLocation = userLocation && userLocation.includes(',');
+      console.log('hasLocation', hasLocation);
 
       if (!hasLocation) {
         setValue('province', geoProvince);
@@ -187,14 +191,8 @@ export default function UpdateProfile() {
           fileService.getFileDisplayUrl(profile.candidateOtherInfoDTO.cv)
         );
       }
-
-      // If location exists, set districts
-      if (locationParts?.[2]) {
-        const provinceDistricts = getDistricts(locationParts[2]);
-        setDistricts(provinceDistricts);
-      }
     }
-  }, [profile, reset, getDistricts]);
+  }, [profile, reset]);
 
   // Format date from DD-MM-YYYY to YYYY-MM-DD for input type="date"
   const formatDate = (dateStr: string | null) => {
