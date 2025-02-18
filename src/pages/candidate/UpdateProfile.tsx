@@ -355,6 +355,17 @@ export default function UpdateProfile() {
     }
   };
 
+  const generateHash = (str: string): string => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash;
+    }
+    // Convert to positive 10-character hex string
+    return Math.abs(hash).toString(16).padStart(10, '0').slice(0, 10);
+  };
+
   const onSubmit = async (data: UpdateProfileForm) => {
     const formData = new FormData();
 
@@ -399,7 +410,12 @@ export default function UpdateProfile() {
       // Handle avatar file
       if (avatar) {
         // If user selected a new avatar
-        formData.append('fileAvatar', avatar);
+        const hashedName = generateHash(avatar.name);
+        const extension = avatar.name.split('.').pop() || 'jpg';
+        const newFile = new File([avatar], `${hashedName}.${extension}`, {
+          type: avatar.type,
+        });
+        formData.append('fileAvatar', newFile);
       } else if (profile?.userDTO?.avatar) {
         // If user has an existing avatar but didn't select a new one
         try {
@@ -407,9 +423,13 @@ export default function UpdateProfile() {
             fileService.getFileDisplayUrl(profile.userDTO.avatar)
           );
           const blob = await response.blob();
-          const fileName =
+          const originalName =
             profile.userDTO.avatar.split('/').pop() || 'avatar.jpg';
-          const file = new File([blob], fileName, { type: blob.type });
+          const hashedName = generateHash(originalName);
+          const extension = originalName.split('.').pop() || 'jpg';
+          const file = new File([blob], `${hashedName}.${extension}`, {
+            type: blob.type,
+          });
           formData.append('fileAvatar', file);
         } catch (error) {
           console.error('Error fetching current avatar:', error);
@@ -418,7 +438,12 @@ export default function UpdateProfile() {
 
       if (cvFile) {
         // If user selected a new CV, append it
-        formData.append('fileCV', cvFile);
+        const hashedName = generateHash(cvFile.name);
+        const extension = cvFile.name.split('.').pop() || 'pdf';
+        const newFile = new File([cvFile], `${hashedName}.${extension}`, {
+          type: cvFile.type,
+        });
+        formData.append('fileCV', newFile);
       } else if (profile?.candidateOtherInfoDTO?.cv) {
         // If user has an existing CV but didn't select a new one
         try {
@@ -435,9 +460,11 @@ export default function UpdateProfile() {
             }
           );
 
-          const fileName =
+          const originalName =
             profile?.candidateOtherInfoDTO?.cv.split('/').pop() || 'cv.pdf';
-          const file = new File([response.data], fileName, {
+          const hashedName = generateHash(originalName);
+          const extension = originalName.split('.').pop() || 'pdf';
+          const file = new File([response.data], `${hashedName}.${extension}`, {
             type: 'application/pdf',
           });
           formData.append('fileCV', file);
@@ -445,8 +472,6 @@ export default function UpdateProfile() {
           console.error('Error fetching current CV:', error);
         }
       }
-
-      console.log(formData);
 
       await updateProfile(formData);
       showSuccess('Cập nhật thông tin thành công');
