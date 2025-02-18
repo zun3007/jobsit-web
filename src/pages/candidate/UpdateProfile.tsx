@@ -3,13 +3,13 @@ import { useForm, useWatch } from 'react-hook-form';
 import Switch from '@/components/ui/Switch';
 import { useCandidates } from '@/hooks/useCandidates';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { vietnameseProvinces, getDistricts } from '@/utils/constants';
 import ToastContainer from '@/components/ui/ToastContainer';
 import { useToast } from '@/hooks/useToast';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { AxiosError } from 'axios';
 import { fileService } from '@/services/fileService';
 import { axiosInstance } from '@/services/api';
+import { useVietnameseLocations } from '@/hooks/useVietnameseLocations';
 
 interface PositionDTO {
   id: number;
@@ -58,7 +58,17 @@ export default function UpdateProfile() {
     isUpdatingSearchableStatus,
     isUpdatingReceiveEmailNotification,
   } = useCandidates();
-  const { province, district, isLoading: isLoadingLocation } = useGeolocation();
+  const {
+    province: geoProvince,
+    district: geoDistrict,
+    isLoading: isLoadingLocation,
+  } = useGeolocation();
+  const {
+    provinces,
+    districts: districtMap,
+    getDistricts,
+    isLoading: isLoadingLocations,
+  } = useVietnameseLocations();
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>('');
   const [cvFile, setCvFile] = useState<File | null>(null);
@@ -116,22 +126,29 @@ export default function UpdateProfile() {
       const provinceDistricts = getDistricts(selectedProvince);
       setDistricts(provinceDistricts);
     }
-  }, [selectedProvince, setValue]);
+  }, [selectedProvince, getDistricts]);
 
   // Auto-fill location if user doesn't have it
   useEffect(() => {
-    if (!isLoadingLocation && province && district) {
+    if (!isLoadingLocation && geoProvince && geoDistrict) {
       const userLocation = profile?.userDTO?.location;
       const hasLocation = userLocation && userLocation.includes(',');
 
       if (!hasLocation) {
-        setValue('province', province);
-        setValue('district', district);
-        const provinceDistricts = getDistricts(province);
+        setValue('province', geoProvince);
+        setValue('district', geoDistrict);
+        const provinceDistricts = getDistricts(geoProvince);
         setDistricts(provinceDistricts);
       }
     }
-  }, [isLoadingLocation, province, district, profile, setValue]);
+  }, [
+    isLoadingLocation,
+    geoProvince,
+    geoDistrict,
+    profile,
+    setValue,
+    getDistricts,
+  ]);
 
   useEffect(() => {
     if (profile) {
@@ -448,7 +465,7 @@ export default function UpdateProfile() {
     }
   };
 
-  if (isLoadingApplications || isLoadingRecommendedJobs) {
+  if (isLoadingApplications || isLoadingRecommendedJobs || isLoadingLocations) {
     return <LoadingSpinner />;
   }
 
@@ -656,7 +673,7 @@ export default function UpdateProfile() {
                         className='w-full p-2 border-2 border-[#00B074] rounded-lg focus:ring-[#00B074] focus:border-[#00B074] outline-none appearance-none bg-white'
                       >
                         <option value=''>Chọn tỉnh/thành phố</option>
-                        {vietnameseProvinces.map((province) => (
+                        {provinces.map((province) => (
                           <option key={province} value={province}>
                             {province}
                           </option>
@@ -1062,7 +1079,7 @@ export default function UpdateProfile() {
                         className='w-full p-2 border-2 border-[#00B074] rounded-lg focus:ring-[#00B074] focus:border-[#00B074] outline-none appearance-none bg-white'
                       >
                         <option value=''>Chọn địa điểm làm việc</option>
-                        {vietnameseProvinces.map((province) => (
+                        {provinces.map((province) => (
                           <option key={province} value={province}>
                             {province}
                           </option>
