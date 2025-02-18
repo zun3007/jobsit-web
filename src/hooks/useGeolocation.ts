@@ -50,18 +50,15 @@ export const useGeolocation = () => {
     navigator.geolocation.getCurrentPosition(
       async (position: GeolocationPosition) => {
         try {
+          // Add delay to respect rate limiting (1 request per second)
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json&accept-language=vi`,
-            {
-              headers: {
-                'User-Agent': 'JobsIT/1.0',
-                'Accept-Language': 'vi',
-              },
-            }
+            `https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json&accept-language=vi`
           );
 
           if (!response.ok) {
-            throw new Error('Không thể xác định địa chỉ');
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
 
           const data: NominatimResponse = await response.json();
@@ -109,7 +106,10 @@ export const useGeolocation = () => {
           console.error('Error getting location:', error);
           setLocation((prev) => ({
             ...prev,
-            error: 'Không thể xác định địa chỉ',
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Không thể xác định địa chỉ',
             isLoading: false,
           }));
         }
@@ -133,6 +133,12 @@ export const useGeolocation = () => {
           error: errorMessage,
           isLoading: false,
         }));
+      },
+      {
+        // Add timeout and high accuracy options
+        timeout: 10000,
+        enableHighAccuracy: true,
+        maximumAge: 0,
       }
     );
   };

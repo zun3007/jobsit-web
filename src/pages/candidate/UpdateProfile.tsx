@@ -133,16 +133,27 @@ export default function UpdateProfile() {
 
   // Auto-fill location if user doesn't have it - with memoized getDistricts
   useEffect(() => {
-    getCurrentLocation();
+    // Only call getCurrentLocation if we don't have a location yet
+    const userLocation = profile?.userDTO?.location;
+    const hasLocation = userLocation && userLocation.includes(',');
+
+    if (!hasLocation) {
+      getCurrentLocation();
+    }
+  }, []); // Run only once on mount
+
+  useEffect(() => {
     if (!isLoadingLocation && geoProvince && geoDistrict) {
+      console.log(geoProvince, geoDistrict);
+
       const userLocation = profile?.userDTO?.location;
       const hasLocation = userLocation && userLocation.includes(',');
 
       if (!hasLocation) {
         setValue('province', geoProvince);
-        setValue('district', geoDistrict);
         const provinceDistricts = getDistricts(geoProvince);
         setDistricts(provinceDistricts);
+        setValue('district', geoDistrict);
       }
     }
   }, [
@@ -152,8 +163,7 @@ export default function UpdateProfile() {
     profile,
     setValue,
     getDistricts,
-    getCurrentLocation,
-  ]); // Remove getDistricts from dependencies
+  ]); // Remove getCurrentLocation from dependencies
 
   useEffect(() => {
     if (profile) {
