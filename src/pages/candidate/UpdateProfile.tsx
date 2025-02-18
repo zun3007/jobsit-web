@@ -142,10 +142,9 @@ export default function UpdateProfile() {
     }
   }, []); // Run only once on mount
 
+  // First effect - handle province change
   useEffect(() => {
-    if (!isLoadingLocation && geoProvince && geoDistrict) {
-      console.log(geoProvince, geoDistrict);
-
+    if (!isLoadingLocation && geoProvince) {
       const userLocation = profile?.userDTO?.location;
       const hasLocation = userLocation && userLocation.includes(',');
 
@@ -153,17 +152,27 @@ export default function UpdateProfile() {
         setValue('province', geoProvince);
         const provinceDistricts = getDistricts(geoProvince);
         setDistricts(provinceDistricts);
-        setValue('district', geoDistrict);
       }
     }
-  }, [
-    isLoadingLocation,
-    geoProvince,
-    geoDistrict,
-    profile,
-    setValue,
-    getDistricts,
-  ]); // Remove getCurrentLocation from dependencies
+  }, [isLoadingLocation, geoProvince, profile, setValue, getDistricts]);
+
+  // Second effect - handle district selection after districts are loaded
+  useEffect(() => {
+    if (districts.length > 0 && geoDistrict) {
+      const userLocation = profile?.userDTO?.location;
+      const hasLocation = userLocation && userLocation.includes(',');
+
+      if (!hasLocation) {
+        // Find matching district
+        const matchingDistrict = districts.find((district) =>
+          district.toLowerCase().includes(geoDistrict.toLowerCase())
+        );
+        if (matchingDistrict) {
+          setValue('district', matchingDistrict);
+        }
+      }
+    }
+  }, [districts, geoDistrict, profile, setValue]);
 
   useEffect(() => {
     if (profile) {
