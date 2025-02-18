@@ -104,7 +104,7 @@ export default function SavedJobs() {
                       className='w-[100px] h-[100px] border rounded-lg overflow-hidden flex-shrink-0'
                     >
                       <img
-                        src={job.companyDTO.logo || '/company-placeholder.png'}
+                        src={job.companyDTO.logo || '/company_logo_temp.svg'}
                         alt={job.companyDTO.name}
                         className='w-full h-full object-contain p-2'
                       />
