@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface JobFilters {
-  scheduleIds?: number[];
-  positionIds?: number[];
-  majorIds?: number[];
+  schedule?: string;
+  position?: string;
+  major?: string;
   name?: string;
   provinceName?: string;
   no: number;

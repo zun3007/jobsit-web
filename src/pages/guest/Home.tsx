@@ -77,15 +77,46 @@ export default function GuestHome() {
 
   // Handle search
   const handleSearch = () => {
+    // Get the names instead of IDs for the filters
+    const scheduleTypes = selectedTypes
+      .map((id) => {
+        if (id === 1) return 'Full time';
+        if (id === 2) return 'Part time';
+        if (id === 3) return 'Remote';
+        return '';
+      })
+      .filter(Boolean);
+
+    const positions = selectedPositions
+      .map((id) => {
+        if (id === 1) return 'Front end';
+        if (id === 2) return 'Back end';
+        if (id === 3) return 'Full Stack';
+        if (id === 7) return 'DevOps';
+        return '';
+      })
+      .filter(Boolean);
+
+    const majors = selectedMajors
+      .map((id) => {
+        if (id === 1) return 'Khoa học máy tính';
+        if (id === 2) return 'Công nghệ phần mềm';
+        if (id === 3) return 'Kỹ thuật máy tính';
+        if (id === 4) return 'Trí tuệ nhân tạo';
+        if (id === 6) return 'Hệ thống quản lý thông tin';
+        return '';
+      })
+      .filter(Boolean);
+
     // Update filters for job search
     dispatch(
       setFilters({
         name: searchTerm || undefined,
         provinceName: location || undefined,
-        scheduleIds: selectedTypes.length > 0 ? selectedTypes : undefined,
-        positionIds:
-          selectedPositions.length > 0 ? selectedPositions : undefined,
-        majorIds: selectedMajors.length > 0 ? selectedMajors : undefined,
+        schedule:
+          scheduleTypes.length > 0 ? scheduleTypes.join(', ') : undefined,
+        position: positions.length > 0 ? positions.join(', ') : undefined,
+        major: majors.length > 0 ? majors.join(', ') : undefined,
         no: 0, // Reset to first page when searching
         limit: filters.limit, // Preserve the existing limit
       })
@@ -109,10 +140,45 @@ export default function GuestHome() {
         setFilters({
           name: urlSearchTerm || undefined,
           provinceName: urlLocation || undefined,
-          scheduleIds: selectedTypes.length > 0 ? selectedTypes : undefined,
-          positionIds:
-            selectedPositions.length > 0 ? selectedPositions : undefined,
-          majorIds: selectedMajors.length > 0 ? selectedMajors : undefined,
+          schedule:
+            selectedTypes.length > 0
+              ? selectedTypes
+                  .map((id) => {
+                    if (id === 1) return 'Full time';
+                    if (id === 2) return 'Part time';
+                    if (id === 3) return 'Remote';
+                    return '';
+                  })
+                  .filter(Boolean)
+                  .join(', ')
+              : undefined,
+          position:
+            selectedPositions.length > 0
+              ? selectedPositions
+                  .map((id) => {
+                    if (id === 1) return 'Front end';
+                    if (id === 2) return 'Back end';
+                    if (id === 3) return 'Full Stack';
+                    if (id === 7) return 'DevOps';
+                    return '';
+                  })
+                  .filter(Boolean)
+                  .join(', ')
+              : undefined,
+          major:
+            selectedMajors.length > 0
+              ? selectedMajors
+                  .map((id) => {
+                    if (id === 1) return 'Khoa học máy tính';
+                    if (id === 2) return 'Công nghệ phần mềm';
+                    if (id === 3) return 'Kỹ thuật máy tính';
+                    if (id === 4) return 'Trí tuệ nhân tạo';
+                    if (id === 6) return 'Hệ thống quản lý thông tin';
+                    return '';
+                  })
+                  .filter(Boolean)
+                  .join(', ')
+              : undefined,
         })
       );
     }

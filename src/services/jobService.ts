@@ -37,9 +37,9 @@ export const jobService = {
       const hasFilters =
         filters.name ||
         filters.provinceName ||
-        (filters.scheduleIds && filters.scheduleIds.length > 0) ||
-        (filters.positionIds && filters.positionIds.length > 0) ||
-        (filters.majorIds && filters.majorIds.length > 0);
+        filters.schedule ||
+        filters.position ||
+        filters.major;
 
       const endpoint = hasFilters ? '/job/filter' : '/job';
 
