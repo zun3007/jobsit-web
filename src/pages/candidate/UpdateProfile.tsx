@@ -65,7 +65,6 @@ export default function UpdateProfile() {
   } = useGeolocation();
   const {
     provinces,
-    districts: districtMap,
     getDistricts,
     isLoading: isLoadingLocations,
   } = useVietnameseLocations();
@@ -195,7 +194,7 @@ export default function UpdateProfile() {
         setDistricts(provinceDistricts);
       }
     }
-  }, [profile, reset]);
+  }, [profile, reset, getDistricts]);
 
   // Format date from DD-MM-YYYY to YYYY-MM-DD for input type="date"
   const formatDate = (dateStr: string | null) => {
