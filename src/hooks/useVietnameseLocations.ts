@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface DistrictMap {
   [key: string]: string[];
@@ -18,7 +18,17 @@ export function useVietnameseLocations(): UseVietnameseLocationsReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Memoize the getDistricts function
+  const getDistricts = useCallback(
+    (province: string): string[] => {
+      return districts[province] || [];
+    },
+    [districts]
+  );
+
   useEffect(() => {
+    let isMounted = true;
+
     async function fetchLocations() {
       try {
         setIsLoading(true);
@@ -29,6 +39,8 @@ export function useVietnameseLocations(): UseVietnameseLocationsReturn {
           'https://vn-public-apis.fpo.vn/provinces/getAll?limit=-1'
         );
         const provincesData = await provincesResponse.json();
+
+        if (!isMounted) return;
 
         if (provincesData.exitcode === 1 && provincesData.data?.data) {
           setProvinces(
@@ -46,6 +58,8 @@ export function useVietnameseLocations(): UseVietnameseLocationsReturn {
         );
         const districtsData = await districtsResponse.json();
 
+        if (!isMounted) return;
+
         if (districtsData.exitcode === 1 && districtsData.data?.data) {
           const districtMap = districtsData.data.data.reduce(
             (
@@ -55,14 +69,11 @@ export function useVietnameseLocations(): UseVietnameseLocationsReturn {
                 path_with_type: string;
               }
             ) => {
-              // Extract province name from path_with_type
               const provinceName = d.path_with_type.split(', ')[1].trim();
               if (!acc[provinceName]) {
                 acc[provinceName] = [];
               }
-              // Add district with its type (e.g., "Quận Ba Đình")
               acc[provinceName].push(d.name_with_type);
-              // Sort districts alphabetically
               acc[provinceName].sort();
               return acc;
             },
@@ -73,22 +84,26 @@ export function useVietnameseLocations(): UseVietnameseLocationsReturn {
           throw new Error('Failed to fetch districts');
         }
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Failed to fetch locations'
-        );
-        setProvinces([]);
-        setDistricts({});
+        if (isMounted) {
+          setError(
+            err instanceof Error ? err.message : 'Failed to fetch locations'
+          );
+          setProvinces([]);
+          setDistricts({});
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     }
 
     fetchLocations();
-  }, []);
 
-  const getDistricts = (province: string): string[] => {
-    return districts[province] || [];
-  };
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return {
     provinces,

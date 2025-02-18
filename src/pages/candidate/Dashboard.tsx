@@ -103,7 +103,9 @@ export default function CandidateDashboard() {
                       Nhận thông báo về email
                     </p>
                     <Switch
-                      checked={profile?.userDTO?.receiveEmailNotification}
+                      checked={
+                        profile?.candidateOtherInfoDTO?.receiveEmailNotification
+                      }
                       onChange={handleReceiveEmailNotificationChange}
                       disabled={isUpdatingReceiveEmailNotification}
                     />

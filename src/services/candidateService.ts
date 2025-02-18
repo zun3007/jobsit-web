@@ -26,7 +26,6 @@ interface UserDTO {
   phone: string | null;
   avatar: string | null;
   location: string | null;
-  receiveEmailNotification: boolean;
   roleDTO: RoleDTO;
   statusDTO: StatusDTO;
 }
@@ -55,6 +54,7 @@ interface CandidateOtherInfoDTO {
   universityDTO: UniversityDTO | null;
   referenceLetter: string | null;
   searchable: boolean;
+  receiveEmailNotification: boolean;
   positionDTOs: PositionDTO[];
   majorDTOs: MajorDTO[];
   scheduleDTOs: ScheduleDTO[];

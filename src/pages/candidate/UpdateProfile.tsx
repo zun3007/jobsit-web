@@ -46,8 +46,36 @@ interface UpdateProfileForm {
   referenceLetter: string;
 }
 
+const scheduleOptions = [
+  { id: 1, name: 'Full time' },
+  { id: 2, name: 'Part time' },
+  { id: 3, name: 'Remote' },
+];
+
+const positionOptions = [
+  { id: 1, name: 'Front end' },
+  { id: 2, name: 'Back end' },
+  { id: 3, name: 'Full Stack' },
+  { id: 7, name: 'DevOps' },
+];
+
+const majorOptions = [
+  { id: 1, name: 'Khoa học máy tính' },
+  { id: 2, name: 'Công nghệ phần mềm' },
+  { id: 3, name: 'Kỹ thuật máy tính' },
+  { id: 4, name: 'Trí tuệ nhân tạo' },
+  { id: 6, name: 'Hệ thống quản lý thông tin' },
+];
+
 export default function UpdateProfile() {
   const { toasts, showSuccess, showError, removeToast } = useToast();
+
+  const {
+    province: geoProvince,
+    district: geoDistrict,
+    isLoading: isLoadingLocation,
+  } = useGeolocation();
+
   const {
     profile,
     isLoadingApplications,
@@ -58,11 +86,7 @@ export default function UpdateProfile() {
     isUpdatingSearchableStatus,
     isUpdatingReceiveEmailNotification,
   } = useCandidates();
-  const {
-    province: geoProvince,
-    district: geoDistrict,
-    isLoading: isLoadingLocation,
-  } = useGeolocation();
+
   const {
     provinces,
     getDistricts,
@@ -73,27 +97,6 @@ export default function UpdateProfile() {
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [currentCV, setCurrentCV] = useState<string>('');
   const [districts, setDistricts] = useState<string[]>([]);
-  const [scheduleOptions] = useState([
-    { id: 1, name: 'Full time' },
-    { id: 2, name: 'Part time' },
-    { id: 3, name: 'Remote' },
-  ]);
-
-  const positionOptions = [
-    { id: 1, name: 'Front end' },
-    { id: 2, name: 'Back end' },
-    { id: 3, name: 'Full Stack' },
-    { id: 7, name: 'DevOps' },
-  ];
-
-  const majorOptions = [
-    { id: 1, name: 'Khoa học máy tính' },
-    { id: 2, name: 'Công nghệ phần mềm' },
-    { id: 3, name: 'Kỹ thuật máy tính' },
-    { id: 4, name: 'Trí tuệ nhân tạo' },
-    { id: 6, name: 'Hệ thống quản lý thông tin' },
-  ];
-
   const [showScheduleDropdown, setShowScheduleDropdown] = useState(false);
   const [showPositionDropdown, setShowPositionDropdown] = useState(false);
   const [showMajorDropdown, setShowMajorDropdown] = useState(false);
@@ -119,15 +122,15 @@ export default function UpdateProfile() {
     name: 'province',
   });
 
-  // Update districts when province changes
+  // Update districts when province changes - with memoized getDistricts
   useEffect(() => {
     if (selectedProvince) {
       const provinceDistricts = getDistricts(selectedProvince);
       setDistricts(provinceDistricts);
     }
-  }, [selectedProvince, getDistricts]);
+  }, [selectedProvince, getDistricts]); // Remove getDistricts from dependencies
 
-  // Auto-fill location if user doesn't have it
+  // Auto-fill location if user doesn't have it - with memoized getDistricts
   useEffect(() => {
     if (!isLoadingLocation && geoProvince && geoDistrict) {
       const userLocation = profile?.userDTO?.location;
@@ -147,7 +150,7 @@ export default function UpdateProfile() {
     profile,
     setValue,
     getDistricts,
-  ]);
+  ]); // Remove getDistricts from dependencies
 
   useEffect(() => {
     if (profile) {
@@ -345,7 +348,7 @@ export default function UpdateProfile() {
       await updateReceiveEmailNotification();
     } catch (error) {
       console.error('Failed to update email notification status:', error);
-      showError('Failed to update email notification status');
+      showError('Đã xảy ra lỗi khi cập nhật trạng thái nhận thông báo');
     }
   };
 
@@ -393,6 +396,7 @@ export default function UpdateProfile() {
         desiredWorkingProvince: data.desiredWorkingProvince || null,
         positionDTOs: data.positionDTOs || [],
         majorDTOs: data.majorDTOs || [],
+        searchable: profile?.candidateOtherInfoDTO?.searchable,
         scheduleDTOs: data.scheduleDTOs || [],
       },
     };
@@ -539,7 +543,8 @@ export default function UpdateProfile() {
                     </p>
                     <Switch
                       checked={
-                        profile?.userDTO?.receiveEmailNotification || false
+                        profile?.candidateOtherInfoDTO
+                          ?.receiveEmailNotification || false
                       }
                       onChange={handleReceiveEmailNotificationChange}
                       disabled={isUpdatingReceiveEmailNotification}

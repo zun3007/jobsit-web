@@ -50,11 +50,6 @@ export const useGeolocation = () => {
 
     navigator.geolocation.getCurrentPosition(
       async (position: GeolocationPosition) => {
-        console.log(
-          'Got coordinates:',
-          position.coords.latitude,
-          position.coords.longitude
-        );
         try {
           const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json&accept-language=vi`,
@@ -71,7 +66,6 @@ export const useGeolocation = () => {
           }
 
           const data: NominatimResponse = await response.json();
-          console.log('Nominatim response:', data);
 
           // Extract address components from the structured address object
           const province = data.address.city || data.address.state || null;
@@ -80,8 +74,6 @@ export const useGeolocation = () => {
             data.address.district ||
             data.address.quarter ||
             null;
-          console.log('Found province:', province);
-          console.log('Found district:', district);
 
           // Map the province name to match our format
           let mappedProvince = province;
@@ -145,10 +137,6 @@ export const useGeolocation = () => {
       }
     );
   };
-
-  useEffect(() => {
-    getCurrentLocation();
-  }, []);
 
   return {
     ...location,
