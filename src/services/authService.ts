@@ -126,6 +126,7 @@ export const authService = {
       await axiosInstance.post('/user/change-password-by-otp', {
         otp,
         newPassword,
+        confirmPassword: newPassword,
       });
     } catch (error) {
       return handleApiError(error);
@@ -171,9 +172,10 @@ export const authService = {
     newPassword: string
   ): Promise<void> {
     try {
-      await axiosInstance.post('/user/change-password', {
+      await axiosInstance.put('/user/change-password', {
         oldPassword,
         newPassword,
+        confirmPassword: newPassword,
       });
     } catch (error) {
       return handleApiError(error);

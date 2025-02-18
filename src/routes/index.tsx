@@ -7,6 +7,7 @@ import { Roles } from '@/types';
 import VerifyOTP from '@/pages/auth/VerifyOTP';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
 import Applications from '@/pages/candidate/Applications';
+import ChangePassword from '@/pages/candidate/ChangePassword';
 
 // Lazy load pages
 const CandidateLogin = lazy(() => import('@/pages/auth/CandidateLogin'));
@@ -36,6 +37,7 @@ export const router = createBrowserRouter([
           { path: 'saved-jobs', element: <SavedJobs /> },
           { path: 'profile', element: <CandidateDashboard /> },
           { path: 'update-profile', element: <UpdateProfile /> },
+          { path: 'change-password', element: <ChangePassword /> },
         ],
       },
       { path: '*', element: <NotFound /> },
