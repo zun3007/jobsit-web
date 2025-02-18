@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/react-query';
 import ToastContainer from '@/components/ui/ToastContainer';
 import { fileService } from '@/services/fileService';
+import { axiosInstance } from '@/services/api';
 
 interface ApplicationModalProps {
   jobId: number;
@@ -53,18 +54,26 @@ export default function ApplicationModal({
       } else if (defaultCV) {
         // If user has an existing CV but didn't select a new one
         try {
-          const response = await fetch(
-            fileService.getFileDisplayUrl(defaultCV)
+          const response = await axiosInstance.get(
+            `/file/display/${defaultCV.split('/').pop()}`,
+            {
+              responseType: 'blob',
+              headers: {
+                'Content-Type': 'application/pdf',
+                Accept: 'application/pdf',
+              },
+            }
           );
-          const blob = await response.blob();
+
           const fileName = defaultCV.split('/').pop() || 'cv.pdf';
-          const file = new File([blob], fileName, { type: blob.type });
+          const file = new File([response.data], fileName, {
+            type: 'application/pdf',
+          });
           formData.append('fileCV', file);
         } catch (error) {
           console.error('Error fetching current CV:', error);
-          showError('Không thể tải CV hiện tại. Vui lòng thử lại.');
-          setIsSubmitting(false);
-          return;
+          // If we can't fetch the existing CV, just send the CV reference
+          formData.append('existingCV', defaultCV);
         }
       }
 

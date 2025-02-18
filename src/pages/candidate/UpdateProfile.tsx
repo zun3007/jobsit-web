@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/useToast';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { AxiosError } from 'axios';
 import { fileService } from '@/services/fileService';
+import { axiosInstance } from '@/services/api';
 
 interface PositionDTO {
   id: number;
@@ -399,10 +400,34 @@ export default function UpdateProfile() {
         }
       }
 
-      // Handle CV file
       if (cvFile) {
-        // If user selected a new CV
+        // If user selected a new CV, append it
         formData.append('fileCV', cvFile);
+      } else if (profile?.candidateOtherInfoDTO?.cv) {
+        // If user has an existing CV but didn't select a new one
+        try {
+          const response = await axiosInstance.get(
+            `/file/display/${profile?.candidateOtherInfoDTO?.cv
+              .split('/')
+              .pop()}`,
+            {
+              responseType: 'blob',
+              headers: {
+                'Content-Type': 'application/pdf',
+                Accept: 'application/pdf',
+              },
+            }
+          );
+
+          const fileName =
+            profile?.candidateOtherInfoDTO?.cv.split('/').pop() || 'cv.pdf';
+          const file = new File([response.data], fileName, {
+            type: 'application/pdf',
+          });
+          formData.append('fileCV', file);
+        } catch (error) {
+          console.error('Error fetching current CV:', error);
+        }
       }
 
       console.log(formData);
