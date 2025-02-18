@@ -74,6 +74,7 @@ export default function UpdateProfile() {
     province: geoProvince,
     district: geoDistrict,
     isLoading: isLoadingLocation,
+    getCurrentLocation,
   } = useGeolocation();
 
   const {
@@ -132,6 +133,7 @@ export default function UpdateProfile() {
 
   // Auto-fill location if user doesn't have it - with memoized getDistricts
   useEffect(() => {
+    getCurrentLocation();
     if (!isLoadingLocation && geoProvince && geoDistrict) {
       const userLocation = profile?.userDTO?.location;
       const hasLocation = userLocation && userLocation.includes(',');
@@ -150,6 +152,7 @@ export default function UpdateProfile() {
     profile,
     setValue,
     getDistricts,
+    getCurrentLocation,
   ]); // Remove getDistricts from dependencies
 
   useEffect(() => {

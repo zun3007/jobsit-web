@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface Location {
   address: string | null;
@@ -46,7 +46,6 @@ export const useGeolocation = () => {
     }
 
     setLocation((prev) => ({ ...prev, isLoading: true }));
-    console.log('Requesting geolocation...');
 
     navigator.geolocation.getCurrentPosition(
       async (position: GeolocationPosition) => {
