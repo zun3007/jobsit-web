@@ -97,6 +97,15 @@ export const queryKeys = {
       companyId,
     ],
   },
+  partner: {
+    root: ['partner'],
+    profile: (id: string) => [...queryKeys.partner.root, 'profile', id],
+    programmes: (params?: Record<string, any>) => [
+      ...queryKeys.partner.root,
+      'programmes',
+      params,
+    ],
+  },
 };
 
 export type ErrorResponse = {

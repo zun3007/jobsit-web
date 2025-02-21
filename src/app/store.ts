@@ -10,6 +10,8 @@ import jobReducer from '@/features/jobs/jobSlice';
 import companyReducer from '@/features/companies/companySlice';
 import candidateReducer from '@/features/candidates/candidateSlice';
 import universityReducer from '@/features/universities/universitySlice';
+import hrReducer from '@/features/hr/hrSlice';
+import partnerReducer from '@/features/partner/partnerSlice';
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +24,8 @@ export const store = configureStore({
     companies: companyReducer,
     candidates: candidateReducer,
     universities: universityReducer,
+    hr: hrReducer,
+    partner: partnerReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
