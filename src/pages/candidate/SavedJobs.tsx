@@ -19,7 +19,7 @@ export default function SavedJobs() {
   const { showError } = useToast();
   const { saveJob, unsaveJob, isSaving } = useSaveJob();
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
   const queryClient = useQueryClient();
 
   const { data: savedJobs, isLoading } = useQuery({
@@ -35,7 +35,7 @@ export default function SavedJobs() {
         await unsaveJob(jobId);
       }
       // Invalidate and refetch saved jobs after successful save/unsave
-      await queryClient.invalidateQueries({ queryKey: ['savedJobs'] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.jobs.saved() });
     } catch {
       showError('Đã có lỗi xảy ra. Vui lòng thử lại sau.');
     }
