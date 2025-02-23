@@ -3,6 +3,7 @@ import { lazy } from 'react';
 import AuthLayout from '@/layouts/AuthLayout';
 import MainLayout from '@/layouts/MainLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import GuestOrCandidateRoute from '@/components/auth/GuestOrCandidateRoute';
 import { Roles } from '@/types';
 import VerifyOTP from '@/pages/auth/VerifyOTP';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
@@ -21,13 +22,24 @@ const CandidateDashboard = lazy(() => import('@/pages/candidate/Dashboard'));
 const SavedJobs = lazy(() => import('@/pages/candidate/SavedJobs'));
 const UpdateProfile = lazy(() => import('@/pages/candidate/UpdateProfile'));
 
+// HR Pages
+const HRDashboard = lazy(() => import('@/pages/hr/Dashboard'));
+const HRJobs = lazy(() => import('@/pages/hr/Jobs'));
+const HRApplications = lazy(() => import('@/pages/hr/Applications'));
+const HRProfile = lazy(() => import('@/pages/hr/Profile'));
+
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <MainLayout />,
     children: [
-      { index: true, element: <GuestHome /> },
-      { path: 'jobs/:id', element: <JobDetails /> },
+      {
+        element: <GuestOrCandidateRoute />,
+        children: [
+          { index: true, element: <GuestHome /> },
+          { path: 'jobs/:id', element: <JobDetails /> },
+        ],
+      },
       {
         path: 'candidate',
         element: <ProtectedRoute roles={[Roles.CANDIDATE]} />,
@@ -37,6 +49,17 @@ export const router = createBrowserRouter([
           { path: 'saved-jobs', element: <SavedJobs /> },
           { path: 'profile', element: <CandidateDashboard /> },
           { path: 'update-profile', element: <UpdateProfile /> },
+          { path: 'change-password', element: <ChangePassword /> },
+        ],
+      },
+      {
+        path: 'hr',
+        element: <ProtectedRoute roles={[Roles.HR]} />,
+        children: [
+          { path: 'dashboard', element: <HRDashboard /> },
+          { path: 'jobs', element: <HRJobs /> },
+          { path: 'applications', element: <HRApplications /> },
+          { path: 'profile', element: <HRProfile /> },
           { path: 'change-password', element: <ChangePassword /> },
         ],
       },
