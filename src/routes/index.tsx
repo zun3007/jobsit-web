@@ -27,6 +27,8 @@ const HRDashboard = lazy(() => import('@/pages/hr/Dashboard'));
 const HRJobs = lazy(() => import('@/pages/hr/Jobs'));
 const HRApplications = lazy(() => import('@/pages/hr/Applications'));
 const HRProfile = lazy(() => import('@/pages/hr/Profile'));
+const CreateJob = lazy(() => import('@/pages/hr/CreateJob'));
+const ExpiredJobs = lazy(() => import('@/pages/hr/ExpiredJobs'));
 
 export const router = createBrowserRouter([
   {
@@ -58,6 +60,8 @@ export const router = createBrowserRouter([
         children: [
           { path: 'dashboard', element: <HRDashboard /> },
           { path: 'jobs', element: <HRJobs /> },
+          { path: 'jobs/create', element: <CreateJob /> },
+          { path: 'jobs/expired', element: <ExpiredJobs /> },
           { path: 'applications', element: <HRApplications /> },
           { path: 'profile', element: <HRProfile /> },
           { path: 'change-password', element: <ChangePassword /> },
