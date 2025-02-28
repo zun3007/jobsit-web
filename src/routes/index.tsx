@@ -29,6 +29,7 @@ const HRApplications = lazy(() => import('@/pages/hr/Applications'));
 const HRProfile = lazy(() => import('@/pages/hr/Profile'));
 const CreateJob = lazy(() => import('@/pages/hr/CreateJob'));
 const ExpiredJobs = lazy(() => import('@/pages/hr/ExpiredJobs'));
+const ExcelJobUpload = lazy(() => import('@/pages/hr/ExcelJobUpload'));
 
 export const router = createBrowserRouter([
   {
@@ -59,8 +60,23 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute roles={[Roles.HR]} />,
         children: [
           { path: 'dashboard', element: <HRDashboard /> },
-          { path: 'jobs', element: <HRJobs /> },
-          { path: 'jobs/create', element: <CreateJob /> },
+          {
+            path: 'jobs',
+            children: [
+              {
+                index: true,
+                element: <HRJobs />,
+              },
+              {
+                path: 'create',
+                element: <CreateJob />,
+              },
+              {
+                path: 'excel-upload',
+                element: <ExcelJobUpload />,
+              },
+            ],
+          },
           { path: 'jobs/expired', element: <ExpiredJobs /> },
           { path: 'applications', element: <HRApplications /> },
           { path: 'profile', element: <HRProfile /> },

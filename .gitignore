@@ -64,3 +64,6 @@ tsconfig.tsbuildinfo
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+#pandas
+create_job_template.py

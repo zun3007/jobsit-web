@@ -3,7 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/app/store';
 import { useJobs } from '@/hooks/useJobs';
 import { setJobFilters } from '@/features/filters/filterSlice';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   IoLocationOutline,
   IoSearchOutline,
@@ -11,17 +11,20 @@ import {
   IoChevronForward,
   IoChevronBack,
   IoDuplicateOutline,
+  IoAddOutline,
 } from 'react-icons/io5';
 import { FaRegClock } from 'react-icons/fa';
 import { useToast } from '@/hooks/useToast';
 import ToastContainer from '@/components/ui/ToastContainer';
 import JobActionModal, { JobActionType } from '@/components/job/JobActionModal';
 import DuplicateJobModal from '@/components/job/DuplicateJobModal';
+import JobPostingTypeModal from '@/components/job/JobPostingTypeModal';
 
 export default function HRJobs() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { jobs, isLoading, totalJobs, deleteJob, duplicateJob } = useJobs();
+  const navigate = useNavigate();
 
   // Local state
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,6 +59,9 @@ export default function HRJobs() {
     jobId: null,
     jobTitle: '',
   });
+
+  // Job posting modal state
+  const [isPostingModalOpen, setIsPostingModalOpen] = useState(false);
 
   // Calculate total pages for pagination
   const totalPages = Math.ceil(totalJobs / itemsPerPage);
@@ -92,15 +98,16 @@ export default function HRJobs() {
 
   // Handle job search
   const handleSearch = useCallback(() => {
+    // Apply filters to the current jobs list
     dispatch(
       setJobFilters({
         name: searchTerm || undefined,
         provinceName: selectedLocation || undefined,
-        no: 0,
+        no: 0, // Reset to first page when searching
         limit: itemsPerPage,
       })
     );
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset to first page when applying new filters
   }, [dispatch, searchTerm, selectedLocation, itemsPerPage]);
 
   // Open modal for job actions
@@ -191,6 +198,23 @@ export default function HRJobs() {
     }
   };
 
+  // Handle opening the job posting type modal
+  const handleOpenPostingModal = () => {
+    setIsPostingModalOpen(true);
+  };
+
+  // Handle regular job posting option
+  const handleRegularPostingClick = () => {
+    setIsPostingModalOpen(false);
+    navigate('/hr/jobs/create');
+  };
+
+  // Handle Excel job posting option
+  const handleExcelPostingClick = () => {
+    setIsPostingModalOpen(false);
+    navigate('/hr/jobs/excel-upload');
+  };
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
@@ -200,20 +224,20 @@ export default function HRJobs() {
       {/* Header section */}
       <div className='flex justify-between items-center mb-6'>
         <h1 className='text-2xl font-bold'>Quản lý tin tuyển dụng</h1>
-        <div className='flex gap-3'>
+        <div className='flex gap-4'>
           <Link
             to='/hr/jobs/expired'
-            className='px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors font-medium flex items-center'
+            className='px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors'
           >
-            <FaRegClock className='mr-2' />
             Tin hết hạn
           </Link>
-          <Link
-            to='/hr/jobs/create'
-            className='px-4 py-2 bg-[#00B074] text-white rounded hover:bg-[#00B074]/90 transition-colors font-medium'
+          <button
+            onClick={handleOpenPostingModal}
+            className='px-4 py-2 bg-[#F9CA63] hover:bg-[#F0BD4F] text-gray-900 rounded flex items-center font-medium transition-colors'
           >
-            Đăng tin mới
-          </Link>
+            <IoAddOutline className='mr-2' />
+            Đăng tin tuyển dụng
+          </button>
         </div>
       </div>
 
@@ -508,6 +532,14 @@ export default function HRJobs() {
         onConfirm={handleDuplicateJob}
         jobTitle={duplicateModalState.jobTitle}
         isLoading={isLoading2}
+      />
+
+      {/* Job Posting Type Modal */}
+      <JobPostingTypeModal
+        isOpen={isPostingModalOpen}
+        onClose={() => setIsPostingModalOpen(false)}
+        onRegularPost={handleRegularPostingClick}
+        onExcelPost={handleExcelPostingClick}
       />
 
       {/* Toast notifications */}
