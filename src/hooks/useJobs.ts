@@ -83,6 +83,21 @@ export function useJobs() {
     },
   });
 
+  // Duplicate job mutation
+  const duplicateJobMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await jobService.duplicateJob(id);
+      dispatch(addJob(response));
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs.root });
+    },
+    onError: (error: Error) => {
+      dispatch(setError(extractErrorMessage(error)));
+    },
+  });
+
   return {
     jobs: jobsData?.contents ?? [],
     totalJobs: jobsData?.totalItems ?? 0,
@@ -90,8 +105,10 @@ export function useJobs() {
     createJob: createJobMutation.mutate,
     updateJob: updateJobMutation.mutate,
     deleteJob: deleteJobMutation.mutate,
+    duplicateJob: duplicateJobMutation.mutate,
     isCreating: createJobMutation.isPending,
     isUpdating: updateJobMutation.isPending,
     isDeleting: deleteJobMutation.isPending,
+    isDuplicating: duplicateJobMutation.isPending,
   };
 }

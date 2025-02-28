@@ -10,16 +10,18 @@ import {
   IoChevronDown,
   IoChevronForward,
   IoChevronBack,
+  IoDuplicateOutline,
 } from 'react-icons/io5';
 import { FaRegClock } from 'react-icons/fa';
 import { useToast } from '@/hooks/useToast';
 import ToastContainer from '@/components/ui/ToastContainer';
 import JobActionModal, { JobActionType } from '@/components/job/JobActionModal';
+import DuplicateJobModal from '@/components/job/DuplicateJobModal';
 
 export default function HRJobs() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const { jobs, isLoading, totalJobs, deleteJob } = useJobs();
+  const { jobs, isLoading, totalJobs, deleteJob, duplicateJob } = useJobs();
 
   // Local state
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,6 +44,17 @@ export default function HRJobs() {
     jobId: null,
     jobTitle: '',
     actionType: 'delete',
+  });
+
+  // Duplicate modal state
+  const [duplicateModalState, setDuplicateModalState] = useState<{
+    isOpen: boolean;
+    jobId: number | null;
+    jobTitle: string;
+  }>({
+    isOpen: false,
+    jobId: null,
+    jobTitle: '',
   });
 
   // Calculate total pages for pagination
@@ -104,6 +117,20 @@ export default function HRJobs() {
     });
   };
 
+  // Open duplicate modal
+  const openDuplicateModal = (jobId: number, jobTitle: string) => {
+    setDuplicateModalState({
+      isOpen: true,
+      jobId,
+      jobTitle,
+    });
+  };
+
+  // Close duplicate modal
+  const closeDuplicateModal = () => {
+    setDuplicateModalState((prev) => ({ ...prev, isOpen: false }));
+  };
+
   // Close modal
   const closeModal = () => {
     setModalState((prev) => ({ ...prev, isOpen: false }));
@@ -142,6 +169,23 @@ export default function HRJobs() {
       closeModal();
     } catch {
       showError(`Thao tác thất bại`);
+    } finally {
+      setIsLoading2(false);
+    }
+  };
+
+  // Handle job duplication
+  const handleDuplicateJob = async () => {
+    if (!duplicateModalState.jobId) return;
+
+    setIsLoading2(true);
+
+    try {
+      await duplicateJob(duplicateModalState.jobId);
+      showSuccess('Nhân bản tin tuyển dụng thành công');
+      closeDuplicateModal();
+    } catch {
+      showError('Nhân bản tin tuyển dụng thất bại');
     } finally {
       setIsLoading2(false);
     }
@@ -359,6 +403,14 @@ export default function HRJobs() {
                           Chỉnh sửa
                         </Link>
 
+                        <button
+                          onClick={() => openDuplicateModal(job.id, job.name)}
+                          className='px-2 py-1 text-xs border border-[#6366F1] text-[#6366F1] rounded hover:bg-[#6366F1] hover:text-white transition-colors flex items-center'
+                        >
+                          <IoDuplicateOutline className='mr-1' />
+                          Nhân bản
+                        </button>
+
                         {isExpired ? (
                           <button
                             onClick={() =>
@@ -446,6 +498,15 @@ export default function HRJobs() {
         onConfirm={handleJobAction}
         jobTitle={modalState.jobTitle}
         actionType={modalState.actionType}
+        isLoading={isLoading2}
+      />
+
+      {/* Duplicate Job Modal */}
+      <DuplicateJobModal
+        isOpen={duplicateModalState.isOpen}
+        onClose={closeDuplicateModal}
+        onConfirm={handleDuplicateJob}
+        jobTitle={duplicateModalState.jobTitle}
         isLoading={isLoading2}
       />
 

@@ -28,7 +28,7 @@ export interface CreateJobRequest {
   scheduleIds: number[];
 }
 
-export interface UpdateJobRequest extends Partial<CreateJobRequest> {}
+export type UpdateJobRequest = Partial<CreateJobRequest>;
 
 export const jobService = {
   async getJobs(filters: JobFilters): Promise<JobResponse> {
@@ -146,5 +146,38 @@ export const jobService = {
   getRecommendedJobs: async (): Promise<JobResponse> => {
     const response = await axiosInstance.get('/jobs/recommended');
     return response.data;
+  },
+
+  async duplicateJob(id: number): Promise<Job> {
+    try {
+      // First, get the job to duplicate
+      const jobToDuplicate = await jobService.getJob(id);
+
+      // Create a new job with the same details but a new endDate (30 days from now by default)
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+      const newJobData: CreateJobRequest = {
+        name: `${jobToDuplicate.name} (Nhân bản)`,
+        description: jobToDuplicate.description,
+        requirement: jobToDuplicate.requirement,
+        amount: jobToDuplicate.amount,
+        startDate: new Date().toISOString().split('T')[0], // Today as start date
+        endDate: thirtyDaysFromNow.toISOString().split('T')[0], // 30 days from now as end date
+        salaryMin: jobToDuplicate.salaryMin,
+        salaryMax: jobToDuplicate.salaryMax,
+        otherInfo: jobToDuplicate.otherInfo || '',
+        location: jobToDuplicate.location,
+        positionIds: jobToDuplicate.positionDTOs.map((position) => position.id),
+        majorIds: jobToDuplicate.majorDTOs.map((major) => major.id),
+        scheduleIds: jobToDuplicate.scheduleDTOs.map((schedule) => schedule.id),
+      };
+
+      // Create the new job
+      const response = await axiosInstance.post<Job>('/job', newJobData);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
   },
 };
