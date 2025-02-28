@@ -367,7 +367,7 @@ export default function HRJobs() {
                         </div>
                         <div>
                           <Link
-                            to={`/jobs/${job.id}`}
+                            to={`/hr/jobs/${job.id}`}
                             className='text-base font-medium text-[#00B074] hover:underline'
                           >
                             {job.name}

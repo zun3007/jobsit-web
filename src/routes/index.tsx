@@ -30,6 +30,7 @@ const HRProfile = lazy(() => import('@/pages/hr/Profile'));
 const CreateJob = lazy(() => import('@/pages/hr/CreateJob'));
 const ExpiredJobs = lazy(() => import('@/pages/hr/ExpiredJobs'));
 const ExcelJobUpload = lazy(() => import('@/pages/hr/ExcelJobUpload'));
+const HRJobDetails = lazy(() => import('@/pages/hr/JobDetails'));
 
 export const router = createBrowserRouter([
   {
@@ -74,6 +75,14 @@ export const router = createBrowserRouter([
               {
                 path: 'excel-upload',
                 element: <ExcelJobUpload />,
+              },
+              {
+                path: ':id',
+                element: <HRJobDetails />,
+              },
+              {
+                path: 'edit/:id',
+                element: <CreateJob />,
               },
             ],
           },
