@@ -32,6 +32,17 @@ const ExpiredJobs = lazy(() => import('@/pages/hr/ExpiredJobs'));
 const ExcelJobUpload = lazy(() => import('@/pages/hr/ExcelJobUpload'));
 const HRJobDetails = lazy(() => import('@/pages/hr/JobDetails'));
 
+// Demo HR Pages
+const DemoLanding = lazy(() => import('@/pages/demo/index'));
+const DemoHRDashboard = lazy(() => import('@/pages/demo/hr/Dashboard'));
+const DemoHRJobs = lazy(() => import('@/pages/demo/hr/Jobs'));
+const DemoHRApplications = lazy(() => import('@/pages/demo/hr/Applications'));
+const DemoHRProfile = lazy(() => import('@/pages/demo/hr/Profile'));
+const DemoCreateJob = lazy(() => import('@/pages/demo/hr/CreateJob'));
+const DemoExpiredJobs = lazy(() => import('@/pages/demo/hr/ExpiredJobs'));
+const DemoExcelJobUpload = lazy(() => import('@/pages/demo/hr/ExcelJobUpload'));
+const DemoHRJobDetails = lazy(() => import('@/pages/demo/hr/JobDetails'));
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -90,6 +101,47 @@ export const router = createBrowserRouter([
           { path: 'applications', element: <HRApplications /> },
           { path: 'profile', element: <HRProfile /> },
           { path: 'change-password', element: <ChangePassword /> },
+        ],
+      },
+      // Demo routes - accessible without authentication
+      {
+        path: 'demo',
+        children: [
+          { index: true, element: <DemoLanding /> },
+          {
+            path: 'hr',
+            children: [
+              { path: '', element: <DemoHRDashboard /> },
+              {
+                path: 'jobs',
+                children: [
+                  {
+                    index: true,
+                    element: <DemoHRJobs />,
+                  },
+                  {
+                    path: 'create',
+                    element: <DemoCreateJob />,
+                  },
+                  {
+                    path: 'excel-upload',
+                    element: <DemoExcelJobUpload />,
+                  },
+                  {
+                    path: ':id',
+                    element: <DemoHRJobDetails />,
+                  },
+                  {
+                    path: 'edit/:id',
+                    element: <DemoCreateJob />,
+                  },
+                ],
+              },
+              { path: 'jobs/expired', element: <DemoExpiredJobs /> },
+              { path: 'applications', element: <DemoHRApplications /> },
+              { path: 'profile', element: <DemoHRProfile /> },
+            ],
+          },
         ],
       },
       { path: '*', element: <NotFound /> },

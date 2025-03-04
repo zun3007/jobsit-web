@@ -71,6 +71,12 @@ export default function UpdateProfile() {
   const { toasts, showSuccess, showError, removeToast } = useToast();
 
   const {
+    provinces,
+    getDistricts,
+    isLoading: isLoadingLocations,
+  } = useVietnameseLocations();
+
+  const {
     province: geoProvince,
     district: geoDistrict,
     isLoading: isLoadingLocation,
@@ -88,11 +94,6 @@ export default function UpdateProfile() {
     isUpdatingReceiveEmailNotification,
   } = useCandidates();
 
-  const {
-    provinces,
-    getDistricts,
-    isLoading: isLoadingLocations,
-  } = useVietnameseLocations();
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>('');
   const [cvFile, setCvFile] = useState<File | null>(null);
@@ -101,6 +102,7 @@ export default function UpdateProfile() {
   const [showScheduleDropdown, setShowScheduleDropdown] = useState(false);
   const [showPositionDropdown, setShowPositionDropdown] = useState(false);
   const [showMajorDropdown, setShowMajorDropdown] = useState(false);
+  const [isDataReady, setIsDataReady] = useState(false);
 
   const { register, handleSubmit, setValue, reset, control, watch } =
     useForm<UpdateProfileForm>({
@@ -123,28 +125,39 @@ export default function UpdateProfile() {
     name: 'province',
   });
 
+  // First, ensure provinces are loaded before doing anything else
+  useEffect(() => {
+    if (!isLoadingLocations && provinces.length > 0) {
+      // Provinces are loaded, now we can proceed
+      setIsDataReady(true);
+    }
+  }, [isLoadingLocations, provinces]);
+
   // Update districts when province changes - with memoized getDistricts
   useEffect(() => {
-    if (selectedProvince) {
+    if (selectedProvince && isDataReady) {
       const provinceDistricts = getDistricts(selectedProvince);
       setDistricts(provinceDistricts);
     }
-  }, [selectedProvince, getDistricts]); // Remove getDistricts from dependencies
+  }, [selectedProvince, getDistricts, isDataReady]);
 
   // Auto-fill location if user doesn't have it - with memoized getDistricts
   useEffect(() => {
     // Only call getCurrentLocation if we don't have a location yet
-    const userLocation = profile?.userDTO?.location;
-    const hasLocation = userLocation && userLocation.includes(',');
+    // and provinces are loaded
+    if (isDataReady) {
+      const userLocation = profile?.userDTO?.location;
+      const hasLocation = userLocation && userLocation.includes(',');
 
-    if (!hasLocation) {
-      getCurrentLocation();
+      if (!hasLocation) {
+        getCurrentLocation();
+      }
     }
-  }, []); // Run only once on mount
+  }, [isDataReady, profile, getCurrentLocation]);
 
   // First effect - handle province change
   useEffect(() => {
-    if (!isLoadingLocation && geoProvince) {
+    if (!isLoadingLocation && geoProvince && isDataReady) {
       const userLocation = profile?.userDTO?.location;
       const hasLocation = userLocation && userLocation.includes(',');
 
@@ -154,11 +167,18 @@ export default function UpdateProfile() {
         setDistricts(provinceDistricts);
       }
     }
-  }, [isLoadingLocation, geoProvince, profile, setValue, getDistricts]);
+  }, [
+    isLoadingLocation,
+    geoProvince,
+    profile,
+    setValue,
+    getDistricts,
+    isDataReady,
+  ]);
 
   // Second effect - handle district selection after districts are loaded
   useEffect(() => {
-    if (districts.length > 0 && geoDistrict) {
+    if (districts.length > 0 && geoDistrict && isDataReady) {
       const userLocation = profile?.userDTO?.location;
       const hasLocation = userLocation && userLocation.includes(',');
 
@@ -172,12 +192,18 @@ export default function UpdateProfile() {
         }
       }
     }
-  }, [districts, geoDistrict, profile, setValue]);
+  }, [districts, geoDistrict, profile, setValue, isDataReady]);
 
   useEffect(() => {
-    if (profile) {
+    if (profile && isDataReady) {
       const userLocation = profile.userDTO.location;
       const locationParts = userLocation?.split(',').map((part) => part.trim());
+
+      // If province exists in the profile, pre-load its districts
+      if (locationParts?.[2] && provinces.includes(locationParts[2])) {
+        const provinceDistricts = getDistricts(locationParts[2]);
+        setDistricts(provinceDistricts);
+      }
 
       reset({
         lastName: profile.userDTO.lastName || '',
@@ -213,7 +239,7 @@ export default function UpdateProfile() {
         );
       }
     }
-  }, [profile, reset]);
+  }, [profile, reset, isDataReady, getDistricts]);
 
   // Format date from DD-MM-YYYY to YYYY-MM-DD for input type="date"
   const formatDate = (dateStr: string | null) => {
@@ -509,7 +535,12 @@ export default function UpdateProfile() {
     }
   };
 
-  if (isLoadingApplications || isLoadingRecommendedJobs || isLoadingLocations) {
+  if (
+    isLoadingApplications ||
+    isLoadingRecommendedJobs ||
+    isLoadingLocations ||
+    !isDataReady
+  ) {
     return <LoadingSpinner />;
   }
 
